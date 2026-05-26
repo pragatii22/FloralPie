@@ -24,3 +24,4 @@ captures/
 .idea/workspace.xml
 .idea/navEditor.xml
 .idea/assetWizardSettings.xml
+app/google-services.json
