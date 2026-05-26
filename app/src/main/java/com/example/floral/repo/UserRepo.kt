@@ -1,4 +1,4 @@
-package com.example.floral
+package com.example.floral.repo
 
 import com.example.floral.model.UserModel
 
@@ -6,12 +6,12 @@ interface UserRepo {
     fun login( email: String,
                password: String,
                callback: (Boolean, String)-> Unit )
-//authentication
+    //authentication
     fun register( email: String, password: String,
                   callback: (Boolean, String, String) -> Unit)
 
-    fun editProfile( id: String, model: UserModel,
-                     callback: (Boolean, String) -> Unit)
+    fun editProfile(id: String, model: UserModel,
+                    callback: (Boolean, String) -> Unit)
 
     //real-time database
     fun addUser( id: String, model: UserModel,

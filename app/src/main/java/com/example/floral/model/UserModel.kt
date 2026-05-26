@@ -1,14 +1,12 @@
-package com.example.floral
-
-import android.location.Address
+package com.example.floral.model
 
 data class UserModel (
     val id: String = " ",
-    val name: String = " ",
-    val email: String = " ",
-    val password: String = " ",
-    val address: String = " ",
-    val contact: String = " ",
+val name: String = " ",
+val email: String = " ",
+val password: String = " ",
+val address: String = " ",
+val contact: String = " ",
 
 ){
     fun toMap(): Map<String, Any?>{

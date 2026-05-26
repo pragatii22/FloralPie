@@ -3,13 +3,14 @@ package com.example.floral
 import android.R.attr.path
 import androidx.compose.runtime.mutableStateOf
 import com.example.floral.model.UserModel
+import com.example.floral.repo.UserRepo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class UserRepoImpl : UserRepo{
+class UserRepoImpl : UserRepo {
      val auth = FirebaseAuth.getInstance()
     val database = FirebaseDatabase.getInstance()
 
