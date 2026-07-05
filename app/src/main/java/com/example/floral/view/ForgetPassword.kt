@@ -1,4 +1,4 @@
-package com.example.floral
+package com.example.floral.view
 
 import android.content.Intent
 import android.os.Bundle
@@ -17,11 +17,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle.Companion.Italic
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.floral.R
 import com.example.floral.ui.theme.FloralTheme
 
 class ForgetPasswordActivity : ComponentActivity() {

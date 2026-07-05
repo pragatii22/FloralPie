@@ -1,4 +1,4 @@
-package com.example.floral
+package com.example.floral.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.floral.R
 import com.example.floral.ui.theme.FloralTheme
 
 class DashboardActivity : ComponentActivity() {
