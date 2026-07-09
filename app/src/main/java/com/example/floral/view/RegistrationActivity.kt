@@ -14,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,9 +27,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.floral.R
+import com.example.floral.model.UserModel
 import com.example.floral.ui.theme.FloralTheme
+import com.example.floral.viewmodel.UserViewModel
+import com.example.floral.viewmodel.UserViewModelFactory
 
 class RegistrationActivity : ComponentActivity() {
 
@@ -45,27 +53,40 @@ class RegistrationActivity : ComponentActivity() {
 
 @Composable
 fun RegistrationBody() {
+     val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
+    RegistrationContent(
+        onRegister = viewModel::register,
+        onAddUser = viewModel::addUser
+    )
+}
+
+@Composable
+fun RegistrationContent(
+    onRegister: (String, String, (Boolean, String, String) -> Unit) -> Unit = { _, _, _ -> },
+    onAddUser: (String, UserModel, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> }
+) {
     val context = LocalContext.current
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+    var contact by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisibility by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image
+        // Background Image - Using a floral background for theme consistency
         Image(
-            painter = painterResource(id = R.drawable.logo),
+            painter = painterResource(id = R.drawable.flower1),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // Semi-transparent overlay to improve text readability
+        // Semi-transparent overlay to achieve the clean floral look from the design
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White.copy(alpha = 0.6f))
+                .background(Color.White.copy(alpha = 0.85f))
         )
 
         // Logos in corners
@@ -135,6 +156,16 @@ fun RegistrationBody() {
             Spacer(modifier = Modifier.height(15.dp))
 
             OutlinedTextField(
+                value = contact,
+                onValueChange = { contact = it },
+                label = { Text("Contact Number") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = textFieldColors
+            )
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Password") },
@@ -157,12 +188,45 @@ fun RegistrationBody() {
 
             Button(
                 onClick = {
-                    context.startActivity(Intent(context, LoginActivity::class.java))
+                    if (fullName.isEmpty() || email.isEmpty() || address.isEmpty() || password.isEmpty() || contact.isEmpty()) {
+                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        Toast.makeText(context, "Invalid email format", Toast.LENGTH_SHORT).show()
+                    } else if (password.length < 6) {
+                        Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                    } else {
+                        onRegister(email, password) { success, message, userId ->
+                            if (success) {
+                                val userModel = UserModel(
+                                    id = userId,
+                                    name = fullName,
+                                    email = email,
+                                    address = address,
+                                    password = password,
+                                    contact = contact
+                                )
+                                onAddUser(userId, userModel) { dbSuccess, dbMessage ->
+                                    if (dbSuccess) {
+                                        Toast.makeText(context, "Registration Successful", Toast.LENGTH_SHORT).show()
+                                        context.startActivity(Intent(context, LoginActivity::class.java))
+                                        (context as? ComponentActivity)?.finish()
+                                    } else {
+                                        Toast.makeText(context, dbMessage, Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            } else {
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4A5D8B) // Navy blue color from screenshot
+                )
             ) {
                 Text(text = "Sign Up", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
@@ -192,6 +256,6 @@ fun RegistrationBody() {
 @Composable
 fun RegistrationActivityPreview() {
     FloralTheme {
-        RegistrationBody()
+        RegistrationContent()
     }
 }

@@ -1,9 +1,9 @@
-package com.example.floral
+package com.example.floral.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.floral.model.UserModel
-import com.example.floral.repo. UserRepo
+import com.example.floral.repo.UserRepo
 
 class UserViewModel(val repo: UserRepo): ViewModel() {
 

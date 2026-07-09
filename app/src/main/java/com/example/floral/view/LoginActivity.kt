@@ -2,6 +2,7 @@ package com.example.floral.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,14 +27,16 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.floral.R
 import com.example.floral.ui.theme.FloralTheme
+import com.example.floral.viewmodel.UserViewModel
+import com.example.floral.viewmodel.UserViewModelFactory
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
             FloralTheme {
                 LoginBody()
@@ -41,51 +46,69 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginBody() {
+fun LoginBody(
+    viewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
+) {
+    val context = LocalContext.current
+    LoginContent(
+        onLogin = { email, password ->
+            if (email.isNotEmpty() && password.isNotEmpty()) {
+                viewModel.login(email, password) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    if (success) {
+                        context.startActivity(Intent(context, DashboardActivity::class.java))
+                        (context as? ComponentActivity)?.finish()
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            }
+        },
+        onForgotPasswordClick = {
+            context.startActivity(Intent(context, ForgetPasswordActivity::class.java))
+        },
+        onSignUpClick = {
+            context.startActivity(Intent(context, RegistrationActivity::class.java))
+        }
+    )
+}
+
+@Composable
+fun LoginContent(
+    onLogin: (String, String) -> Unit,
+    onForgotPasswordClick: () -> Unit,
+    onSignUpClick: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisibility by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image
+        // Background Image - Using a floral background for consistency
         Image(
-            painter = painterResource(id = R.drawable.flower1),
+            painter = painterResource(id = R.drawable.flower2),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // Semi-transparent overlay to improve text readability
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White.copy(alpha = 0.6f))
+            modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.6f))
         )
 
-        // Logos in corners
-        val logoPainter = painterResource(id = R.drawable.logo)
-        val logoModifier = Modifier.size(60.dp).padding(16.dp)
-
+        // Corner Logo
         Image(
-            painter = logoPainter,
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
-            modifier = logoModifier.align(Alignment.TopStart)
+            modifier = Modifier.size(60.dp).padding(16.dp).align(Alignment.TopStart)
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
+            modifier = Modifier.fillMaxSize().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Login",
-                color = Color.Black,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = "Welcome Back", color = Color.Black, fontSize = 32.sp, fontWeight = FontWeight.Bold)
 
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -117,7 +140,7 @@ fun LoginBody() {
                             painter = painterResource(
                                 id = if (passwordVisibility) R.drawable.baseline_visibility_24 else R.drawable.baseline_visibility_off_24
                             ),
-                            contentDescription = if (passwordVisibility) "Hide password" else "Show password"
+                            contentDescription = null
                         )
                     }
                 },
@@ -125,46 +148,43 @@ fun LoginBody() {
                 colors = textFieldColors
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Forgot Password?",
-                color = Color(0xFF1976D2), // A slightly darker blue for better contrast
-                fontWeight = FontWeight.Medium,
+                color = Color(0xFF1976D2),
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.End)
                     .clickable {
-                        context.startActivity(Intent(context, ForgetPasswordActivity::class.java))
+                        onForgotPasswordClick()
                     }
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
-                    context.startActivity(Intent(context, DashboardActivity::class.java))
+                    onLogin(email, password)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(8.dp)
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4A5D8B) // Navy blue color
+                )
             ) {
                 Text(text = "Login", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
+            // Registration Link
+            Row(modifier = Modifier.padding(top = 16.dp)) {
                 Text("Don't have an account? ", color = Color.Black)
                 Text(
                     text = "Sign Up",
                     color = Color(0xFF1976D2),
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        context.startActivity(Intent(context, RegistrationActivity::class.java))
+                        onSignUpClick()
                     }
                 )
             }
@@ -174,8 +194,12 @@ fun LoginBody() {
 
 @Preview(showBackground = true)
 @Composable
-fun LoginActivityPreview() {
+fun LoginBodyPreview() {
     FloralTheme {
-        LoginBody()
+        LoginContent(
+            onLogin = { _, _ -> },
+            onForgotPasswordClick = {},
+            onSignUpClick = {}
+        )
     }
 }
