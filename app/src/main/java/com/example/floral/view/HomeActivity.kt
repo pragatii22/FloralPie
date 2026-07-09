@@ -111,12 +111,22 @@ fun HomeBody() {
                         FlowerCard(
                             flower = flower,
                             onDelete = {
-                                productViewModel.deleteProduct(flower.productId) { success, message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                // Confirmation Dialog
+                                val builder = android.app.AlertDialog.Builder(context)
+                                builder.setTitle("Delete Flower")
+                                builder.setMessage("Are you sure you want to delete this flower?")
+                                builder.setPositiveButton("Yes") { _, _ ->
+                                    productViewModel.deleteProduct(flower.productId) { success, message ->
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    }
                                 }
+                                builder.setNegativeButton("Cancel", null)
+                                builder.show()
                             },
                             onEdit = {
-                                Toast.makeText(context, "Edit feature coming soon", Toast.LENGTH_SHORT).show()
+                                val intent = Intent(context, EditProductActivity::class.java)
+                                intent.putExtra("productId", flower.productId)
+                                context.startActivity(intent)
                             }
                         )
                     }

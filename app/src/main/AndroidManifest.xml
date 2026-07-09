@@ -33,8 +33,32 @@
             android:theme="@style/Theme.Floral" />
         <activity
             android:name=".view.LoginActivity"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_login"
+            android:theme="@style/Theme.Floral" />
+        <activity
+            android:name=".view.HomeActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Floral" />
+        <activity
+            android:name=".view.AddProductActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Floral" />
+        <activity
+            android:name=".view.EditProductActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Floral" />
+        <activity
+            android:name=".view.DashboardActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Floral" />
+        <activity
+            android:name=".view.AdminDashboardActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Floral" />
+        <activity
+            android:name=".view.ProfileActivity"
+            android:exported="false"
             android:theme="@style/Theme.Floral" />
         <activity
             android:name=".MainActivity"

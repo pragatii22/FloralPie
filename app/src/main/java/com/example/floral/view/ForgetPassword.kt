@@ -72,7 +72,7 @@ fun ForgetPasswordContent(
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Image
         Image(
-            painter = painterResource(id = R.drawable.flower3),
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop

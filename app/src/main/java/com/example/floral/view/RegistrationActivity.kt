@@ -76,7 +76,7 @@ fun RegistrationContent(
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Image - Using a floral background for theme consistency
         Image(
-            painter = painterResource(id = R.drawable.flower1),
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -202,8 +202,9 @@ fun RegistrationContent(
                                     name = fullName,
                                     email = email,
                                     address = address,
+                                    contact = contact,
                                     password = password,
-                                    contact = contact
+                                    role = if (email.trim().equals("admin@floral.com", ignoreCase = true)) "admin" else "user"
                                 )
                                 onAddUser(userId, userModel) { dbSuccess, dbMessage ->
                                     if (dbSuccess) {

@@ -114,17 +114,14 @@ class UserRepoImpl : UserRepo {
         id: String,
         callback: (Boolean, String, UserModel?) -> Unit
     ) {
-            ref.child(id).addValueEventListener(object : ValueEventListener {
+            ref.child(id).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()){
                         val user = snapshot.getValue(UserModel::class.java)
-                        user.let {
-                            callback(true,"User fetched successfully",it)
-
-
-                        }
+                        callback(true,"User fetched successfully",user)
+                    } else {
+                        callback(false, "User not found", null)
                     }
-                    TODO("Not yet implemented")
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -161,9 +158,7 @@ class UserRepoImpl : UserRepo {
             auth.signOut()
             callback(true, "Logout Successful")
         } catch (e: Exception) {
-            callback(false, "Logout Failed: e.toString()")
+            callback(false, "Logout Failed: ${e.message}")
         }
-
-
     }
 }

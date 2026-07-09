@@ -7,6 +7,7 @@ val email: String = " ",
 val password: String = " ",
 val address: String = " ",
 val contact: String = " ",
+val role: String = "user"
 
 ){
     fun toMap(): Map<String, Any?>{
@@ -15,6 +16,7 @@ val contact: String = " ",
             "email" to email,
             "address" to address,
             "contact" to contact,
+            "role" to role
         )
     }
 }

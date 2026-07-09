@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,14 +50,32 @@ fun LoginBody(
     viewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
 ) {
     val context = LocalContext.current
+    val userState by viewModel.users.observeAsState()
+
+    LaunchedEffect(userState) {
+        userState?.let { user ->
+            if (user.role == "admin") {
+                context.startActivity(Intent(context, AdminDashboardActivity::class.java))
+            } else {
+                context.startActivity(Intent(context, DashboardActivity::class.java))
+            }
+            (context as? ComponentActivity)?.finish()
+        }
+    }
+
     LoginContent(
         onLogin = { email, password ->
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                viewModel.login(email, password) { success, message ->
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            val trimmedEmail = email.trim()
+            val trimmedPassword = password.trim()
+            if (trimmedEmail.isNotEmpty() && trimmedPassword.isNotEmpty()) {
+                viewModel.login(trimmedEmail, trimmedPassword) { success, message ->
                     if (success) {
-                        context.startActivity(Intent(context, DashboardActivity::class.java))
-                        (context as? ComponentActivity)?.finish()
+                        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                        if (userId != null) {
+                            viewModel.getUserId(userId)
+                        }
+                    } else {
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                     }
                 }
             } else {
@@ -86,7 +104,7 @@ fun LoginContent(
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Image - Using a floral background for consistency
         Image(
-            painter = painterResource(id = R.drawable.flower2),
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -108,7 +126,7 @@ fun LoginContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "Welcome Back", color = Color.Black, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Welcome ", color = Color.Black, fontSize = 32.sp, fontWeight = FontWeight.Bold)
 
             Spacer(modifier = Modifier.height(30.dp))
 
