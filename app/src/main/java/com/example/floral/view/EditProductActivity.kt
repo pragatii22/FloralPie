@@ -1,5 +1,6 @@
 package com.example.floral.view
 
+import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -8,6 +9,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -65,7 +68,18 @@ fun EditProductBody(productId: String) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Edit Flower") })
+            TopAppBar(
+                title = { Text("Edit Flower") },
+                navigationIcon = {
+                    IconButton(onClick = { (context as? Activity)?.finish() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
         }
     ) { padding ->
         LazyColumn(
@@ -125,7 +139,7 @@ fun EditProductBody(productId: String) {
                         productViewModel.updateProduct(updatedProduct) { success, message ->
                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             if (success) {
-                                (context as? ComponentActivity)?.finish()
+                                (context as? Activity)?.finish()
                             }
                         }
                     }
