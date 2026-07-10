@@ -22,9 +22,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.floral.model.CartModel
+import com.example.floral.model.OrderModel
 import com.example.floral.repo.CartRepoImpl
+import com.example.floral.repo.OrderRepoImpl
 import com.example.floral.ui.theme.FloralTheme
 import com.example.floral.viewmodel.CartViewModel
+import com.example.floral.viewmodel.OrderViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 class CartActivity : ComponentActivity() {
@@ -44,6 +47,7 @@ class CartActivity : ComponentActivity() {
 fun CartBody() {
     val context = LocalContext.current
     val cartViewModel = remember { CartViewModel(CartRepoImpl()) }
+    val orderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
     val auth = FirebaseAuth.getInstance()
     val currentUser = auth.currentUser
     val cartItems by cartViewModel.cartItems.observeAsState(initial = emptyList())
@@ -63,7 +67,11 @@ fun CartBody() {
                     IconButton(onClick = { (context as? Activity)?.finish() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         },
         bottomBar = {
@@ -83,10 +91,24 @@ fun CartBody() {
                             fontWeight = FontWeight.Bold
                         )
                         Button(onClick = {
-                            // Order placement logic will go here
-                            Toast.makeText(context, "Order logic pending", Toast.LENGTH_SHORT).show()
+                            if (currentUser != null) {
+                                val order = OrderModel(
+                                    userId = currentUser.uid,
+                                    items = cartItems!!,
+                                    totalAmount = total
+                                )
+                                orderViewModel.placeOrder(order) { success, message ->
+                                    if (success) {
+                                        cartViewModel.clearCart(currentUser.uid) { _, _ -> }
+                                        Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_LONG).show()
+                                        (context as? Activity)?.finish()
+                                    } else {
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
                         }) {
-                            Text("Checkout")
+                            Text("Place Order")
                         }
                     }
                 }

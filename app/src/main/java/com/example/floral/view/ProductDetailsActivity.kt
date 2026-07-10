@@ -2,6 +2,7 @@ package com.example.floral.view
 
 import android.app.Activity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -26,15 +27,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.floral.R
-import com.example.floral.repo.ProductRepoImpl
-import com.example.floral.ui.theme.FloralTheme
-import com.example.floral.viewmodel.ProductViewModel
-import com.google.firebase.auth.FirebaseAuth
-
 import com.example.floral.model.CartModel
 import com.example.floral.repo.CartRepoImpl
+import com.example.floral.repo.ProductRepoImpl
+import com.example.floral.ui.theme.FloralTheme
 import com.example.floral.viewmodel.CartViewModel
-import android.widget.Toast
+import com.example.floral.viewmodel.ProductViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 class ProductDetailsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

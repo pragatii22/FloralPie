@@ -1,5 +1,6 @@
 package com.example.floral.view
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Person
@@ -87,7 +89,11 @@ fun DashboardBody() {
                     }) {
                         Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         }
     ) { padding ->
@@ -187,7 +193,7 @@ fun UserFlowerCard(flower: ProductModel, onAddToCart: () -> Unit, onClick: () ->
                     onClick = onAddToCart,
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(0.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(8.dp),
                     enabled = flower.quantity > 0
                 ) {
                     Text(if (flower.quantity > 0) "Add to Cart" else "Out of Stock", fontSize = 12.sp)
