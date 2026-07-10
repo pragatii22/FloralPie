@@ -54,6 +54,7 @@ fun LoginBody(
 
     LaunchedEffect(userState) {
         userState?.let { user ->
+            Toast.makeText(context, "Welcome, ${user.name}", Toast.LENGTH_SHORT).show()
             if (user.role == "admin") {
                 context.startActivity(Intent(context, AdminDashboardActivity::class.java))
             } else {
