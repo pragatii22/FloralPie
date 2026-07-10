@@ -7,8 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -16,13 +18,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.floral.model.ProductModel
 import com.example.floral.repo.ProductRepoImpl
-import com.example.floral.viewmodel.ProductViewModel
 import com.example.floral.ui.theme.FloralTheme
+import com.example.floral.viewmodel.ProductViewModel
 
 class AddProductActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +46,7 @@ fun AddProductBody() {
     var price by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
-    var isActive by remember { mutableStateOf(false) }
+    var imageUrl by remember { mutableStateOf("") }
 
     val productViewModel = remember { ProductViewModel(ProductRepoImpl()) }
     var loading by remember { mutableStateOf(false) }
@@ -52,7 +55,7 @@ fun AddProductBody() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Flower") },
+                title = { Text("Add New Flower", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { (context as? Activity)?.finish() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -65,102 +68,105 @@ fun AddProductBody() {
             )
         }
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = name,
-                    label = { Text("Product Name") },
-                    placeholder = { Text("Enter Product Name") },
-                    onValueChange = { name = it }
-                )
-                Spacer(modifier = Modifier.height(15.dp))
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = price,
-                    label = { Text("Price") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    placeholder = { Text("Enter Product price") },
-                    onValueChange = { price = it }
-                )
-                Spacer(modifier = Modifier.height(15.dp))
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = description,
-                    label = { Text("Description") },
-                    placeholder = { Text("Enter Product description") },
-                    onValueChange = { description = it }
-                )
-                Spacer(modifier = Modifier.height(15.dp))
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = quantity,
-                    label = { Text("Quantity") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    placeholder = { Text("Enter Product quantity") },
-                    onValueChange = { quantity = it }
-                )
-                Spacer(modifier = Modifier.height(15.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Checkbox(
-                        checked = isActive,
-                        onCheckedChange = { isActive = it }
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = name,
+                        label = { Text("Flower Name") },
+                        onValueChange = { name = it },
+                        shape = RoundedCornerShape(8.dp)
                     )
-                    Text("Is Active")
-                }
-                Spacer(modifier = Modifier.height(25.dp))
+                    
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = price,
+                        label = { Text("Price ($)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        onValueChange = { price = it },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = quantity,
+                        label = { Text("Stock Quantity") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        onValueChange = { quantity = it },
+                        shape = RoundedCornerShape(8.dp)
+                    )
 
-                ElevatedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        if (name.isBlank() || price.isBlank()) {
-                            Toast.makeText(context, "Please fill name and price", Toast.LENGTH_SHORT).show()
-                            return@ElevatedButton
-                        }
-                        
-                        loading = true
-                        val model = ProductModel(
-                            productName = name,
-                            price = price.toDoubleOrNull() ?: 0.0,
-                            description = description,
-                            quantity = quantity.toIntOrNull() ?: 0,
-                            isActive = isActive
-                        )
-                        
-                        productViewModel.addProduct(model) { success, message ->
-                            loading = false
-                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                            if (success) {
-                                name = ""
-                                price = ""
-                                description = ""
-                                quantity = ""
-                                isActive = false
-                            }
-                        }
-                    }) {
-                    if (loading) {
-                        CircularProgressIndicator()
-                    } else {
-                        Text("Add Product")
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = description,
+                        label = { Text("Description") },
+                        onValueChange = { description = it },
+                        minLines = 3,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = imageUrl,
+                        label = { Text("Image URL") },
+                        onValueChange = { imageUrl = it },
+                        placeholder = { Text("Paste flower image link here") },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+            }
+
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(8.dp),
+                onClick = {
+                    if (name.isBlank() || price.isBlank() || quantity.isBlank()) {
+                        Toast.makeText(context, "Please fill required fields", Toast.LENGTH_SHORT).show()
+                        return@Button
                     }
+                    
+                    loading = true
+                    val model = ProductModel(
+                        productName = name,
+                        price = price.toDoubleOrNull() ?: 0.0,
+                        description = description,
+                        quantity = quantity.toIntOrNull() ?: 0,
+                        imageUrl = imageUrl,
+                        isActive = true
+                    )
+                    
+                    productViewModel.addProduct(model) { success, message ->
+                        loading = false
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        if (success) {
+                            (context as? Activity)?.finish()
+                        }
+                    }
+                }) {
+                if (loading) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Save Flower", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AddProductPreview() {
-    FloralTheme {
-        AddProductBody()
     }
 }
