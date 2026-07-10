@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -23,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -31,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.floral.R
 import com.example.floral.model.ProductModel
 import com.example.floral.repo.ProductRepoImpl
@@ -65,15 +68,10 @@ fun HomeBody() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logo),
-                            contentDescription = "Logo",
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Floral Bloom & Brew", fontWeight = FontWeight.Bold)
+                title = { Text("Manage Flowers", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { (context as? Activity)?.finish() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -127,6 +125,11 @@ fun HomeBody() {
                                 val intent = Intent(context, EditProductActivity::class.java)
                                 intent.putExtra("productId", flower.productId)
                                 context.startActivity(intent)
+                            },
+                            onViewDetails = {
+                                val intent = Intent(context, ProductDetailsActivity::class.java)
+                                intent.putExtra("productId", flower.productId)
+                                context.startActivity(intent)
                             }
                         )
                     }
@@ -140,22 +143,35 @@ fun HomeBody() {
 fun FlowerCard(
     flower: ProductModel,
     onDelete: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onViewDetails: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            // Placeholder Image - using one of existing drawables
-            Image(
-                painter = painterResource(id = R.drawable.flower1),
-                contentDescription = flower.productName,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                contentScale = ContentScale.Crop
-            )
+            if (flower.imageUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = flower.imageUrl,
+                    contentDescription = flower.productName,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.logo),
+                    error = painterResource(id = R.drawable.logo)
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = flower.productName,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -178,6 +194,14 @@ fun FlowerCard(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = "Quantity: ${flower.quantity}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -203,7 +227,7 @@ fun FlowerCard(
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                     }
                     Button(
-                        onClick = { /* View Details */ },
+                        onClick = onViewDetails,
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text("View Details")
