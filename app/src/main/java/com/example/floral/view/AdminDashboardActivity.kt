@@ -2,19 +2,25 @@ package com.example.floral.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,6 +68,7 @@ fun AdminDashboardBody() {
                     onClick = {
                         scope.launch { drawerState.close() }
                         FirebaseAuth.getInstance().signOut()
+                        Toast.makeText(context, "Logout Successful", Toast.LENGTH_SHORT).show()
                         context.startActivity(Intent(context, LoginActivity::class.java))
                         (context as? ComponentActivity)?.finish()
                     },
@@ -73,7 +80,7 @@ fun AdminDashboardBody() {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Floral Bloom & Brew", fontWeight = FontWeight.Bold) },
+                    title = { Text("Admin Dashboard", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
                         IconButton(onClick = {
                             scope.launch { drawerState.open() }
@@ -94,16 +101,25 @@ fun AdminDashboardBody() {
                     .padding(padding)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)
+                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Top)
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
-                AdminCard(title = "Manage Flowers") {
+                Spacer(modifier = Modifier.height(8.dp))
+                AdminCard(
+                    title = "Manage Flowers",
+                    icon = Icons.Default.Inventory
+                ) {
                     context.startActivity(Intent(context, HomeActivity::class.java))
                 }
-                AdminCard(title = "Manage Users") {
+                AdminCard(
+                    title = "Manage Users",
+                    icon = Icons.Default.People
+                ) {
                     context.startActivity(Intent(context, ManageUsersActivity::class.java))
                 }
-                AdminCard(title = "Manage Orders") {
+                AdminCard(
+                    title = "Manage Orders",
+                    icon = Icons.Default.ShoppingCart
+                ) {
                     context.startActivity(Intent(context, ManageOrdersActivity::class.java))
                 }
             }
@@ -112,19 +128,31 @@ fun AdminDashboardBody() {
 }
 
 @Composable
-fun AdminCard(title: String, onClick: () -> Unit) {
+fun AdminCard(title: String, icon: ImageVector, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(text = title, fontSize = 22.sp, fontWeight = FontWeight.Medium)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
