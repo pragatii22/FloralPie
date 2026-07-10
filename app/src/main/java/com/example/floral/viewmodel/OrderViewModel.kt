@@ -35,4 +35,8 @@ class OrderViewModel(val repo: OrderRepo) : ViewModel() {
             _loading.value = false
         }
     }
+
+    fun updateOrderStatus(orderId: String, status: String, callback: (Boolean, String) -> Unit) {
+        repo.updateOrderStatus(orderId, status, callback)
+    }
 }

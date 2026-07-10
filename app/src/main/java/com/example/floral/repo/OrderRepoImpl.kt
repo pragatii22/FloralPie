@@ -59,4 +59,14 @@ class OrderRepoImpl : OrderRepo {
             }
         })
     }
+
+    override fun updateOrderStatus(orderId: String, status: String, callback: (Boolean, String) -> Unit) {
+        orderRef.child(orderId).child("status").setValue(status).addOnCompleteListener {
+            if (it.isSuccessful) {
+                callback(true, "Status updated to $status")
+            } else {
+                callback(false, it.exception?.message ?: "Failed to update status")
+            }
+        }
+    }
 }
