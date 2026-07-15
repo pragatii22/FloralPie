@@ -50,6 +50,39 @@ fun AdminDashboardBody() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    AdminDashboardContent(
+        drawerState = drawerState,
+        onMenuClick = { scope.launch { drawerState.open() } },
+        onProfileClick = {
+            scope.launch { drawerState.close() }
+            context.startActivity(Intent(context, ProfileActivity::class.java))
+        },
+        onLogoutClick = {
+            scope.launch { drawerState.close() }
+            FirebaseAuth.getInstance().signOut()
+            Toast.makeText(context, "Logout Successful", Toast.LENGTH_SHORT).show()
+            context.startActivity(Intent(context, LoginActivity::class.java))
+            (context as? ComponentActivity)?.finish()
+        },
+        onManageFlowersClick = {
+            context.startActivity(Intent(context, HomeActivity::class.java))
+        },
+        onManageUsersClick = {
+            context.startActivity(Intent(context, ManageUsersActivity::class.java))
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AdminDashboardContent(
+    drawerState: DrawerState,
+    onMenuClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    onManageFlowersClick: () -> Unit,
+    onManageUsersClick: () -> Unit
+) {
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -58,25 +91,16 @@ fun AdminDashboardBody() {
                 NavigationDrawerItem(
                     label = { Text("Profile") },
                     selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        context.startActivity(Intent(context, ProfileActivity::class.java))
-                    },
+                    onClick = onProfileClick,
                     icon = { Icon(Icons.Default.Person, contentDescription = null) }
                 )
-                
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 NavigationDrawerItem(
                     label = { Text("Logout") },
                     selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        FirebaseAuth.getInstance().signOut()
-                        Toast.makeText(context, "Logout Successful", Toast.LENGTH_SHORT).show()
-                        context.startActivity(Intent(context, LoginActivity::class.java))
-                        (context as? ComponentActivity)?.finish()
-                    },
+                    onClick = onLogoutClick,
                     icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) }
                 )
             }
@@ -87,9 +111,7 @@ fun AdminDashboardBody() {
                 TopAppBar(
                     title = { Text("Admin Dashboard", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { drawerState.open() }
-                        }) {
+                        IconButton(onClick = onMenuClick) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
                     },
@@ -113,20 +135,34 @@ fun AdminDashboardBody() {
                 Spacer(modifier = Modifier.height(8.dp))
                 AdminCard(
                     title = "Manage Flowers & Orders",
-                    icon = Icons.Default.Inventory
-                ) {
-                    context.startActivity(Intent(context, HomeActivity::class.java))
-                }
+                    icon = Icons.Default.Inventory,
+                    onClick = onManageFlowersClick
+                )
                 AdminCard(
                     title = "Manage Users",
-                    icon = Icons.Default.People
-                ) {
-                    context.startActivity(Intent(context, ManageUsersActivity::class.java))
-                }
+                    icon = Icons.Default.People,
+                    onClick = onManageUsersClick
+                )
             }
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun AdminDashboardPreview() {
+    FloralTheme {
+        AdminDashboardContent(
+            drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
+            onMenuClick = {},
+            onProfileClick = {},
+            onLogoutClick = {},
+            onManageFlowersClick = {},
+            onManageUsersClick = {}
+        )
+    }
+}
+
 
 @Composable
 fun AdminCard(title: String, icon: ImageVector, onClick: () -> Unit) {

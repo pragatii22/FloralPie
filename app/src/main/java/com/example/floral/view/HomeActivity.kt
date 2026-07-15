@@ -62,14 +62,13 @@ class HomeActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeBody() {
     val context = LocalContext.current
     val productViewModel: ProductViewModel = remember { ProductViewModel(ProductRepoImpl()) }
     val orderViewModel: OrderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
     val userViewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
-    
+
     val allProducts by productViewModel.allProducts.observeAsState(initial = emptyList())
     val orders by orderViewModel.orders.observeAsState(initial = emptyList())
     val allUsers by userViewModel.allUsers.observeAsState(emptyList())
@@ -84,12 +83,65 @@ fun HomeBody() {
         userViewModel.getAllUser()
     }
 
+    HomeContent(
+        selectedTab = selectedTab,
+        onTabSelected = { selectedTab = it },
+        allProducts = allProducts ?: emptyList(),
+        orders = orders ?: emptyList(),
+        allUsers = allUsers ?: emptyList(),
+        loadingProducts = loadingProducts,
+        loadingOrders = loadingOrders,
+        onBack = { (context as? Activity)?.finish() },
+        onAddProduct = {
+            context.startActivity(Intent(context, AddProductActivity::class.java))
+        },
+        onDeleteProduct = { flower ->
+            val builder = android.app.AlertDialog.Builder(context)
+            builder.setTitle("Delete Flower")
+            builder.setMessage("Are you sure you want to delete '${flower.productName}'?")
+            builder.setPositiveButton("Delete") { _, _ ->
+                productViewModel.deleteProduct(flower.productId) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+            builder.setNegativeButton("Cancel", null)
+            builder.show()
+        },
+        onEditProduct = { flower ->
+            val intent = Intent(context, EditProductActivity::class.java)
+            intent.putExtra("productId", flower.productId)
+            context.startActivity(intent)
+        },
+        onUpdateOrderStatus = { orderId, newStatus ->
+            orderViewModel.updateOrderStatus(orderId, newStatus) { success, message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeContent(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    allProducts: List<ProductModel>,
+    orders: List<com.example.floral.model.OrderModel>,
+    allUsers: List<com.example.floral.model.UserModel?>,
+    loadingProducts: Boolean,
+    loadingOrders: Boolean,
+    onBack: () -> Unit,
+    onAddProduct: () -> Unit,
+    onDeleteProduct: (ProductModel) -> Unit,
+    onEditProduct: (ProductModel) -> Unit,
+    onUpdateOrderStatus: (String, String) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Manage Flowers & Orders", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { (context as? Activity)?.finish() }) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -103,9 +155,7 @@ fun HomeBody() {
         floatingActionButton = {
             if (selectedTab == 0) {
                 FloatingActionButton(
-                    onClick = {
-                        context.startActivity(Intent(context, AddProductActivity::class.java))
-                    },
+                    onClick = onAddProduct,
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Product")
@@ -113,16 +163,18 @@ fun HomeBody() {
             }
         }
     ) { padding ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .background(Color(0xFFF8F8F8))) {
-            
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Color(0xFFF8F8F8))
+        ) {
+
             TabRow(selectedTabIndex = selectedTab) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) {
+                Tab(selected = selectedTab == 0, onClick = { onTabSelected(0) }) {
                     Text("Flowers", modifier = Modifier.padding(16.dp))
                 }
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) {
+                Tab(selected = selectedTab == 1, onClick = { onTabSelected(1) }) {
                     Text("Orders", modifier = Modifier.padding(16.dp))
                 }
             }
@@ -131,34 +183,23 @@ fun HomeBody() {
                 if (selectedTab == 0) {
                     if (loadingProducts) {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    } else if (allProducts.isNullOrEmpty()) {
-                        Text("No flowers found.", modifier = Modifier.align(Alignment.Center), fontSize = 18.sp)
+                    } else if (allProducts.isEmpty()) {
+                        Text(
+                            "No flowers found.",
+                            modifier = Modifier.align(Alignment.Center),
+                            fontSize = 18.sp
+                        )
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items(allProducts!!) { flower ->
+                            items(allProducts) { flower ->
                                 FlowerCard(
                                     flower = flower,
-                                    onDelete = {
-                                        val builder = android.app.AlertDialog.Builder(context)
-                                        builder.setTitle("Delete Flower")
-                                        builder.setMessage("Are you sure you want to delete '${flower.productName}'?")
-                                        builder.setPositiveButton("Delete") { _, _ ->
-                                            productViewModel.deleteProduct(flower.productId) { success, message ->
-                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                            }
-                                        }
-                                        builder.setNegativeButton("Cancel", null)
-                                        builder.show()
-                                    },
-                                    onEdit = {
-                                        val intent = Intent(context, EditProductActivity::class.java)
-                                        intent.putExtra("productId", flower.productId)
-                                        context.startActivity(intent)
-                                    }
+                                    onDelete = { onDeleteProduct(flower) },
+                                    onEdit = { onEditProduct(flower) }
                                 )
                             }
                         }
@@ -166,24 +207,28 @@ fun HomeBody() {
                 } else {
                     if (loadingOrders) {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    } else if (orders.isNullOrEmpty()) {
-                        Text("No orders found.", modifier = Modifier.align(Alignment.Center), fontSize = 18.sp)
+                    } else if (orders.isEmpty()) {
+                        Text(
+                            "No orders found.",
+                            modifier = Modifier.align(Alignment.Center),
+                            fontSize = 18.sp
+                        )
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            itemsIndexed(orders!!) { index, order ->
-                                val customerName = allUsers?.find { it?.id == order.userId }?.name ?: "Unknown Customer"
+                            itemsIndexed(orders) { index, order ->
+                                val customerName =
+                                    allUsers.find { it?.id == order.userId }?.name
+                                        ?: "Unknown Customer"
                                 OrderAdminCard(
                                     order = order,
                                     index = index + 1,
                                     customerName = customerName,
-                                    onUpdateStatus = { newStatus: String ->
-                                        orderViewModel.updateOrderStatus(order.orderId, newStatus) { success: Boolean, message: String ->
-                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                        }
+                                    onUpdateStatus = { newStatus ->
+                                        onUpdateOrderStatus(order.orderId, newStatus)
                                     }
                                 )
                             }
@@ -194,6 +239,31 @@ fun HomeBody() {
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun HomePreview() {
+    FloralTheme {
+        HomeContent(
+            selectedTab = 0,
+            onTabSelected = {},
+            allProducts = listOf(
+                ProductModel(productName = "Red Rose", price = 12.99, quantity = 10, imageUrl = ""),
+                ProductModel(productName = "White Lily", price = 15.50, quantity = 5, imageUrl = "")
+            ),
+            orders = emptyList(),
+            allUsers = emptyList(),
+            loadingProducts = false,
+            loadingOrders = false,
+            onBack = {},
+            onAddProduct = {},
+            onDeleteProduct = {},
+            onEditProduct = {},
+            onUpdateOrderStatus = { _, _ -> }
+        )
+    }
+}
+
 
 @Composable
 fun FlowerCard(
@@ -246,7 +316,7 @@ fun FlowerCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "$${String.format(Locale.getDefault(), "%.2f", flower.price)}",
+                    text = "Rs.${String.format(Locale.getDefault(), "%.2f", flower.price)}",
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold

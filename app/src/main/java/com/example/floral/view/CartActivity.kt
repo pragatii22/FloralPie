@@ -54,9 +54,8 @@ class CartActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CartBody(showBack: Boolean = false) {
+fun CartBody(showBack: Boolean = false, hideTopBar: Boolean = false) {
     val context = LocalContext.current
     val cartViewModel = remember { CartViewModel(CartRepoImpl()) }
     val auth = FirebaseAuth.getInstance()
@@ -70,28 +69,58 @@ fun CartBody(showBack: Boolean = false) {
         }
     }
 
+    CartContent(
+        cartItems = cartItems ?: emptyList(),
+        loading = loading,
+        showBack = showBack,
+        hideTopBar = hideTopBar,
+        onBack = { (context as? Activity)?.finish() },
+        onCheckout = {
+            context.startActivity(Intent(context, CheckoutActivity::class.java))
+        },
+        onDelete = { item ->
+            cartViewModel.removeFromCart(item.cartId) { success, message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CartContent(
+    cartItems: List<CartModel>,
+    loading: Boolean,
+    showBack: Boolean,
+    hideTopBar: Boolean,
+    onBack: () -> Unit,
+    onCheckout: () -> Unit,
+    onDelete: (CartModel) -> Unit
+) {
     Scaffold(
         containerColor = Color(0xFFF8F8F8),
         topBar = {
-            TopAppBar(
-                title = { Text("My Shopping Cart", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    if (showBack) {
-                        IconButton(onClick = { (context as? Activity)?.finish() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            if (!hideTopBar) {
+                TopAppBar(
+                    title = { Text("My Shopping Cart", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        if (showBack) {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            }
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black,
-                    navigationIconContentColor = Color.Black
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,
+                        titleContentColor = Color.Black,
+                        navigationIconContentColor = Color.Black
+                    )
                 )
-            )
+            }
         },
         bottomBar = {
-            if (!cartItems.isNullOrEmpty()) {
-                val total = cartItems?.sumOf { it.price * it.quantity } ?: 0.0
+            if (cartItems.isNotEmpty()) {
+                val total = cartItems.sumOf { it.price * it.quantity }
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = Color.White,
@@ -108,17 +137,17 @@ fun CartBody(showBack: Boolean = false) {
                         Column {
                             Text("Total Amount", fontSize = 14.sp, color = Color.Gray)
                             Text(
-                                "$${String.format(Locale.getDefault(), "%.2f", total)}",
+                                "Rs.${String.format(Locale.getDefault(), "%.2f", total)}",
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
                         Button(
-                            onClick = {
-                                context.startActivity(Intent(context, CheckoutActivity::class.java))
-                            },
-                            modifier = Modifier.height(50.dp).width(160.dp),
+                            onClick = onCheckout,
+                            modifier = Modifier
+                                .height(50.dp)
+                                .width(160.dp),
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Text("Checkout", fontWeight = FontWeight.Bold)
@@ -128,15 +157,24 @@ fun CartBody(showBack: Boolean = false) {
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (cartItems.isNullOrEmpty()) {
+            } else if (cartItems.isEmpty()) {
                 Column(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(80.dp), tint = Color.LightGray)
+                    Icon(
+                        Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = Color.LightGray
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         "Your cart is empty",
@@ -151,14 +189,10 @@ fun CartBody(showBack: Boolean = false) {
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(cartItems!!) { item ->
+                    items(cartItems) { item ->
                         CartItemCard(
                             item = item,
-                            onDelete = {
-                                cartViewModel.removeFromCart(item.cartId) { success, message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                            onDelete = { onDelete(item) }
                         )
                     }
                 }
@@ -166,6 +200,40 @@ fun CartBody(showBack: Boolean = false) {
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun CartPreview() {
+    FloralTheme {
+        CartContent(
+            cartItems = listOf(
+                CartModel(
+                    cartId = "1",
+                    productId = "p1",
+                    productName = "Red Rose",
+                    price = 12.99,
+                    quantity = 2,
+                    imageUrl = ""
+                ),
+                CartModel(
+                    cartId = "2",
+                    productId = "p2",
+                    productName = "White Lily",
+                    price = 15.50,
+                    quantity = 1,
+                    imageUrl = ""
+                )
+            ),
+            loading = false,
+            showBack = true,
+            hideTopBar = false,
+            onBack = {},
+            onCheckout = {},
+            onDelete = {}
+        )
+    }
+}
+
 
 @Composable
 fun CartItemCard(item: CartModel, onDelete: () -> Unit) {
@@ -215,7 +283,7 @@ fun CartItemCard(item: CartModel, onDelete: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "$${String.format(Locale.getDefault(), "%.2f", item.price)} x ${item.quantity}",
+                    text = "Rs.${String.format(Locale.getDefault(), "%.2f", item.price)} x ${item.quantity}",
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp

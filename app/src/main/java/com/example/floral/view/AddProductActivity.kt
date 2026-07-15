@@ -68,12 +68,76 @@ fun AddProductBody() {
         imageUri = uri
     }
 
+    AddProductContent(
+        name = name,
+        onNameChange = { name = it },
+        price = price,
+        onPriceChange = { price = it },
+        description = description,
+        onDescriptionChange = { description = it },
+        quantity = quantity,
+        onQuantityChange = { quantity = it },
+        imageUri = imageUri,
+        onImageClick = { launcher.launch("image/*") },
+        loading = loading,
+        onBack = { (context as? Activity)?.finish() },
+        onSave = {
+            if (name.isBlank() || price.isBlank() || quantity.isBlank() || imageUri == null) {
+                Toast.makeText(context, "Please fill all fields and select an image", Toast.LENGTH_SHORT).show()
+                return@AddProductContent
+            }
+
+            loading = true
+            productViewModel.uploadImage(imageUri!!) { success, imageUrl ->
+                if (success) {
+                    val model = ProductModel(
+                        productName = name,
+                        price = price.toDoubleOrNull() ?: 0.0,
+                        description = description,
+                        quantity = quantity.toIntOrNull() ?: 0,
+                        imageUrl = imageUrl,
+                        isActive = true
+                    )
+
+                    productViewModel.addProduct(model) { addSuccess, message ->
+                        loading = false
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        if (addSuccess) {
+                            (context as? Activity)?.finish()
+                        }
+                    }
+                } else {
+                    loading = false
+                    Toast.makeText(context, "Image upload failed: $imageUrl", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddProductContent(
+    name: String,
+    onNameChange: (String) -> Unit,
+    price: String,
+    onPriceChange: (String) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    quantity: String,
+    onQuantityChange: (String) -> Unit,
+    imageUri: Any?,
+    onImageClick: () -> Unit,
+    loading: Boolean,
+    onBack: () -> Unit,
+    onSave: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Add New Flower", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { (context as? Activity)?.finish() }) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -99,7 +163,7 @@ fun AddProductBody() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .clickable { launcher.launch("image/*") },
+                    .clickable { onImageClick() },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.LightGray.copy(alpha = 0.2f))
             ) {
@@ -108,12 +172,19 @@ fun AddProductBody() {
                         AsyncImage(
                             model = imageUri,
                             contentDescription = "Selected Image",
-                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(16.dp)),
                             contentScale = ContentScale.Crop
                         )
                     } else {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(48.dp), tint = Color.Gray)
+                            Icon(
+                                Icons.Default.Image,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color.Gray
+                            )
                             Text("Tap to select flower image", color = Color.Gray)
                         }
                     }
@@ -134,25 +205,25 @@ fun AddProductBody() {
                         modifier = Modifier.fillMaxWidth(),
                         value = name,
                         label = { Text("Flower Name") },
-                        onValueChange = { name = it },
+                        onValueChange = onNameChange,
                         shape = RoundedCornerShape(16.dp)
                     )
-                    
+
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = price,
-                        label = { Text("Price ($)") },
+                        label = { Text("Price (Rs.)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        onValueChange = { price = it },
+                        onValueChange = onPriceChange,
                         shape = RoundedCornerShape(16.dp)
                     )
-                    
+
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(),
                         value = quantity,
                         label = { Text("Stock Quantity") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        onValueChange = { quantity = it },
+                        onValueChange = onQuantityChange,
                         shape = RoundedCornerShape(16.dp)
                     )
 
@@ -160,7 +231,7 @@ fun AddProductBody() {
                         modifier = Modifier.fillMaxWidth(),
                         value = description,
                         label = { Text("Description") },
-                        onValueChange = { description = it },
+                        onValueChange = onDescriptionChange,
                         minLines = 3,
                         shape = RoundedCornerShape(16.dp)
                     )
@@ -173,39 +244,13 @@ fun AddProductBody() {
                     .height(50.dp),
                 shape = RoundedCornerShape(16.dp),
                 enabled = !loading,
-                onClick = {
-                    if (name.isBlank() || price.isBlank() || quantity.isBlank() || imageUri == null) {
-                        Toast.makeText(context, "Please fill all fields and select an image", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    
-                    loading = true
-                    productViewModel.uploadImage(imageUri!!) { success, imageUrl ->
-                        if (success) {
-                            val model = ProductModel(
-                                productName = name,
-                                price = price.toDoubleOrNull() ?: 0.0,
-                                description = description,
-                                quantity = quantity.toIntOrNull() ?: 0,
-                                imageUrl = imageUrl,
-                                isActive = true
-                            )
-                            
-                            productViewModel.addProduct(model) { addSuccess, message ->
-                                loading = false
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                if (addSuccess) {
-                                    (context as? Activity)?.finish()
-                                }
-                            }
-                        } else {
-                            loading = false
-                            Toast.makeText(context, "Image upload failed: $imageUrl", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }) {
+                onClick = onSave
+            ) {
                 if (loading) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
                 } else {
                     Text("Save Flower", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
@@ -213,3 +258,26 @@ fun AddProductBody() {
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun AddProductPreview() {
+    FloralTheme {
+        AddProductContent(
+            name = "Red Rose",
+            onNameChange = {},
+            price = "12.99",
+            onPriceChange = {},
+            description = "A beautiful red rose bouquet.",
+            onDescriptionChange = {},
+            quantity = "10",
+            onQuantityChange = {},
+            imageUri = null,
+            onImageClick = {},
+            loading = false,
+            onBack = {},
+            onSave = {}
+        )
+    }
+}
+

@@ -50,7 +50,6 @@ class ManageUsersActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageUsersBody(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -61,6 +60,12 @@ fun ManageUsersBody(onBack: () -> Unit) {
     LaunchedEffect(Unit) {
         viewModel.getAllUser()
     }
+
+    ManageUsersContent(
+        allUsers = allUsers ?: emptyList(),
+        onBack = onBack,
+        onDeleteClick = { userToDelete = it }
+    )
 
     if (userToDelete != null) {
         AlertDialog(
@@ -87,7 +92,15 @@ fun ManageUsersBody(onBack: () -> Unit) {
             }
         )
     }
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ManageUsersContent(
+    allUsers: List<UserModel?>,
+    onBack: () -> Unit,
+    onDeleteClick: (UserModel) -> Unit
+) {
     Scaffold(
         containerColor = Color(0xFFF8F8F8),
         topBar = {
@@ -112,14 +125,30 @@ fun ManageUsersBody(onBack: () -> Unit) {
             contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(allUsers ?: emptyList()) { user ->
+            items(allUsers) { user ->
                 user?.let {
-                    UserItemCard(user = it, onDelete = { userToDelete = it })
+                    UserItemCard(user = it, onDelete = { onDeleteClick(it) })
                 }
             }
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun ManageUsersPreview() {
+    FloralTheme {
+        ManageUsersContent(
+            allUsers = listOf(
+                UserModel(id = "1", name = "John Doe", email = "john@example.com", contact = "123456789", address = "123 Flower St", imageUrl = ""),
+                UserModel(id = "2", name = "Jane Smith", email = "jane@example.com", contact = "987654321", address = "456 Garden Ave", imageUrl = "")
+            ),
+            onBack = {},
+            onDeleteClick = {}
+        )
+    }
+}
+
 
 @Composable
 fun UserItemCard(user: UserModel, onDelete: () -> Unit) {

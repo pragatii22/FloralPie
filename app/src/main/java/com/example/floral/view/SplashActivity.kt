@@ -52,11 +52,8 @@ fun SplashBody() {
                     val repo = UserRepoImpl()
                     repo.getUserId(currentUser.uid) { success, _, user ->
                         if (success && user != null) {
-                            val intent = if (user.role == "admin") {
-                                Intent(context, AdminDashboardActivity::class.java)
-                            } else {
-                                Intent(context, DashboardActivity::class.java)
-                            }
+                            // Unified DashboardActivity for all users
+                            val intent = Intent(context, DashboardActivity::class.java)
                             context.startActivity(intent)
                         } else {
                             // Fallback to login if user data cannot be fetched

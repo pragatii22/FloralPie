@@ -45,7 +45,6 @@ class CheckoutActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutBody() {
     val context = LocalContext.current
@@ -64,13 +63,49 @@ fun CheckoutBody() {
 
     val total = cartItems?.sumOf { it.price * it.quantity } ?: 0.0
 
+    CheckoutContent(
+        cartItems = cartItems ?: emptyList(),
+        total = total,
+        loading = loading,
+        onBack = { (context as? Activity)?.finish() },
+        onPlaceOrder = {
+            if (currentUser != null && !cartItems.isNullOrEmpty()) {
+                val order = OrderModel(
+                    userId = currentUser.uid,
+                    items = cartItems!!,
+                    totalAmount = total,
+                    status = "Pending"
+                )
+                orderViewModel.placeOrder(order) { success, message ->
+                    if (success) {
+                        cartViewModel.clearCart(currentUser.uid) { _, _ -> }
+                        Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_LONG).show()
+                        (context as? Activity)?.finish()
+                    } else {
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CheckoutContent(
+    cartItems: List<com.example.floral.model.CartModel>,
+    total: Double,
+    loading: Boolean,
+    onBack: () -> Unit,
+    onPlaceOrder: () -> Unit
+) {
     Scaffold(
         containerColor = Color(0xFFF8F8F8),
         topBar = {
             TopAppBar(
                 title = { Text("Checkout", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { (context as? Activity)?.finish() }) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -89,31 +124,13 @@ fun CheckoutBody() {
                 shadowElevation = 8.dp
             ) {
                 Button(
-                    onClick = {
-                        if (currentUser != null && !cartItems.isNullOrEmpty()) {
-                            val order = OrderModel(
-                                userId = currentUser.uid,
-                                items = cartItems!!,
-                                totalAmount = total,
-                                status = "Pending"
-                            )
-                            orderViewModel.placeOrder(order) { success, message ->
-                                if (success) {
-                                    cartViewModel.clearCart(currentUser.uid) { _, _ -> }
-                                    Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_LONG).show()
-                                    (context as? Activity)?.finish()
-                                } else {
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-                    },
+                    onClick = onPlaceOrder,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = !cartItems.isNullOrEmpty() && !loading
+                    enabled = cartItems.isNotEmpty() && !loading
                 ) {
                     if (loading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
@@ -135,13 +152,13 @@ fun CheckoutBody() {
                 Text("Selected Flowers", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
 
-            items(cartItems ?: emptyList()) { item ->
+            items(cartItems) { item ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("${item.productName} x ${item.quantity}", fontSize = 16.sp)
-                    Text("$${String.format(Locale.getDefault(), "%.2f", item.price * item.quantity)}", fontWeight = FontWeight.SemiBold)
+                    Text("Rs.${String.format(Locale.getDefault(), "%.2f", item.price * item.quantity)}", fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -154,7 +171,7 @@ fun CheckoutBody() {
                 ) {
                     Text("Total Price", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                     Text(
-                        "$${String.format(Locale.getDefault(), "%.2f", total)}",
+                        "Rs.${String.format(Locale.getDefault(), "%.2f", total)}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         color = MaterialTheme.colorScheme.primary
@@ -166,7 +183,12 @@ fun CheckoutBody() {
 
             item {
                 Text("Payment Method", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Note: For now we only accept Cash On Delivery.",
+                    fontSize = 13.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                )
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -186,3 +208,21 @@ fun CheckoutBody() {
         }
     }
 }
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun CheckoutPreview() {
+    FloralTheme {
+        CheckoutContent(
+            cartItems = listOf(
+                com.example.floral.model.CartModel(productName = "Red Rose", price = 12.99, quantity = 2),
+                com.example.floral.model.CartModel(productName = "White Lily", price = 15.50, quantity = 1)
+            ),
+            total = 41.48,
+            loading = false,
+            onBack = {},
+            onPlaceOrder = {}
+        )
+    }
+}
+

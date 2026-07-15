@@ -25,18 +25,23 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.floral.R
 import com.example.floral.model.CartModel
+import com.example.floral.model.ProductModel
 import com.example.floral.repo.CartRepoImpl
 import com.example.floral.repo.ProductRepoImpl
 import com.example.floral.ui.theme.FloralTheme
 import com.example.floral.viewmodel.CartViewModel
 import com.example.floral.viewmodel.ProductViewModel
+import com.example.floral.viewmodel.UserViewModel
+import com.example.floral.viewmodel.UserViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
-import java.util.*
+import java.util.Locale
 
 class ProductDetailsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +67,14 @@ fun ProductDetailsBody(productId: String) {
     
     val auth = FirebaseAuth.getInstance()
     val currentUser = auth.currentUser
-    val isAdmin = currentUser?.email == "admin@floral.com"
+    val userViewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
+    val userState by userViewModel.users.observeAsState()
+    
+    LaunchedEffect(currentUser) {
+        currentUser?.uid?.let { uid ->
+            userViewModel.getUserId(uid)
+        }
+    }
 
     LaunchedEffect(productId) {
         if (productId.isNotEmpty()) {
@@ -70,12 +82,66 @@ fun ProductDetailsBody(productId: String) {
         }
     }
 
+    ProductDetailsContent(
+        product = product,
+        loading = loading,
+        isAdmin = userState?.role == "admin",
+        onBack = { (context as? Activity)?.finish() },
+        onAddToCart = { flower ->
+            if (currentUser != null) {
+                val cartItem = CartModel(
+                    productId = flower.productId,
+                    userId = currentUser.uid,
+                    productName = flower.productName,
+                    price = flower.price,
+                    quantity = 1,
+                    imageUrl = flower.imageUrl
+                )
+                cartViewModel.addToCart(cartItem) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
+            }
+        },
+        onBuyNow = { flower ->
+            if (currentUser != null) {
+                val cartItem = CartModel(
+                    productId = flower.productId,
+                    userId = currentUser.uid,
+                    productName = flower.productName,
+                    price = flower.price,
+                    quantity = 1,
+                    imageUrl = flower.imageUrl
+                )
+                cartViewModel.addToCart(cartItem) { success, _ ->
+                    if (success) {
+                        context.startActivity(android.content.Intent(context, CartActivity::class.java))
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductDetailsContent(
+    product: ProductModel?,
+    loading: Boolean,
+    isAdmin: Boolean,
+    onBack: () -> Unit,
+    onAddToCart: (ProductModel) -> Unit,
+    onBuyNow: (ProductModel) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Flower Details", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { (context as? Activity)?.finish() }) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -97,7 +163,7 @@ fun ProductDetailsBody(productId: String) {
                     fontSize = 18.sp
                 )
             } else {
-                val flower = product!!
+                val flower = product
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -137,7 +203,7 @@ fun ProductDetailsBody(productId: String) {
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = "$${String.format(Locale.getDefault(), "%.2f", flower.price)}",
+                                text = "Rs. ${String.format(Locale.getDefault(), "%.2f", flower.price)}",
                                 fontSize = 24.sp,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
@@ -183,23 +249,7 @@ fun ProductDetailsBody(productId: String) {
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 OutlinedButton(
-                                    onClick = {
-                                        if (currentUser != null) {
-                                            val cartItem = CartModel(
-                                                productId = flower.productId,
-                                                userId = currentUser.uid,
-                                                productName = flower.productName,
-                                                price = flower.price,
-                                                quantity = 1,
-                                                imageUrl = flower.imageUrl
-                                            )
-                                            cartViewModel.addToCart(cartItem) { success, message ->
-                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                            }
-                                        } else {
-                                            Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
-                                        }
-                                    },
+                                    onClick = { onAddToCart(flower) },
                                     modifier = Modifier.weight(1f).height(56.dp),
                                     shape = RoundedCornerShape(16.dp),
                                     enabled = flower.quantity > 0
@@ -210,28 +260,7 @@ fun ProductDetailsBody(productId: String) {
                                 }
 
                                 Button(
-                                    onClick = {
-                                        // Simple "Buy Now" could just be adding to cart and navigating to cart
-                                        if (currentUser != null) {
-                                            val cartItem = CartModel(
-                                                productId = flower.productId,
-                                                userId = currentUser.uid,
-                                                productName = flower.productName,
-                                                price = flower.price,
-                                                quantity = 1,
-                                                imageUrl = flower.imageUrl
-                                            )
-                                            cartViewModel.addToCart(cartItem) { success, _ ->
-                                                if (success) {
-                                                    // Navigate to CartActivity or Checkout
-                                                    // For now, let's just go to Cart
-                                                    context.startActivity(android.content.Intent(context, CartActivity::class.java))
-                                                }
-                                            }
-                                        } else {
-                                            Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
-                                        }
-                                    },
+                                    onClick = { onBuyNow(flower) },
                                     modifier = Modifier.weight(1f).height(56.dp),
                                     shape = RoundedCornerShape(16.dp),
                                     enabled = flower.quantity > 0
@@ -244,5 +273,27 @@ fun ProductDetailsBody(productId: String) {
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProductDetailsPreview() {
+    FloralTheme {
+        ProductDetailsContent(
+            product = ProductModel(
+                productId = "1",
+                productName = "Red Rose",
+                price = 12.99,
+                quantity = 10,
+                description = "Beautiful red roses for your loved ones. Freshly picked from the garden.",
+                imageUrl = ""
+            ),
+            loading = false,
+            isAdmin = false,
+            onBack = {},
+            onAddToCart = {},
+            onBuyNow = {}
+        )
     }
 }

@@ -33,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,7 +51,7 @@ class ProfileActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FloralTheme {
-                ProfileBody { finish() }
+                ProfileBody(onBack = { finish() })
             }
         }
     }
@@ -58,7 +59,7 @@ class ProfileActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileBody(onBack: () -> Unit) {
+fun ProfileBody(onBack: () -> Unit, hideTopBar: Boolean = false) {
     val context = LocalContext.current
     val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
     val userState by viewModel.users.observeAsState()
@@ -98,21 +99,106 @@ fun ProfileBody(onBack: () -> Unit) {
         }
     }
 
+    ProfileContent(
+        name = name,
+        onNameChange = { name = it },
+        address = address,
+        onAddressChange = { address = it },
+        contact = contact,
+        onContactChange = { contact = it },
+        email = email,
+        imageUrl = imageUrl,
+        selectedImageUri = selectedImageUri,
+        loading = loading,
+        onBack = onBack,
+        onPickImage = { launcher.launch("image/*") },
+        onSave = {
+            if (name.isBlank() || address.isBlank() || contact.isBlank()) {
+                Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
+            } else {
+                loading = true
+                val performUpdate = { finalImageUrl: String ->
+                    currentUser?.uid?.let { uid ->
+                        val updatedUser = UserModel(
+                            id = uid,
+                            name = name,
+                            email = email,
+                            address = address,
+                            contact = contact,
+                            role = role,
+                            imageUrl = finalImageUrl
+                        )
+                        viewModel.editProfile(uid, updatedUser) { success, message ->
+                            loading = false
+                            if (success) {
+                                viewModel.getUserId(uid)
+                            }
+                            Toast.makeText(context, if (success) "Profile updated successfully!" else message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+                if (selectedImageUri != null) {
+                    viewModel.uploadImage(selectedImageUri!!) { success, newUrl ->
+                        if (success) {
+                            performUpdate(newUrl)
+                        } else {
+                            loading = false
+                            Toast.makeText(context, "Image upload failed: $newUrl", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    performUpdate(imageUrl)
+                }
+            }
+        },
+        onLogout = {
+            FirebaseAuth.getInstance().signOut()
+            Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
+            val intent = Intent(context, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            context.startActivity(intent)
+        },
+        hideTopBar = hideTopBar
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileContent(
+    name: String,
+    onNameChange: (String) -> Unit,
+    address: String,
+    onAddressChange: (String) -> Unit,
+    contact: String,
+    onContactChange: (String) -> Unit,
+    email: String,
+    imageUrl: String,
+    selectedImageUri: Uri?,
+    loading: Boolean,
+    onBack: () -> Unit,
+    onPickImage: () -> Unit,
+    onSave: () -> Unit,
+    onLogout: () -> Unit,
+    hideTopBar: Boolean = false
+) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Profile", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+            if (!hideTopBar) {
+                TopAppBar(
+                    title = { Text("Profile", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
-            )
+            }
         }
     ) { padding ->
         Column(
@@ -132,7 +218,7 @@ fun ProfileBody(onBack: () -> Unit) {
                     .clip(CircleShape)
                     .background(Color.White)
                     .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
-                    .clickable { launcher.launch("image/*") },
+                    .clickable { onPickImage() },
                 contentAlignment = Alignment.Center
             ) {
                 if (selectedImageUri != null) {
@@ -211,56 +297,20 @@ fun ProfileBody(onBack: () -> Unit) {
 
                     HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
 
-                    ProfileInputField(value = name, onValueChange = { name = it }, label = "Full Name")
+                    ProfileInputField(value = name, onValueChange = onNameChange, label = "Full Name")
                     
                     ProfileInputField(value = email, onValueChange = {}, label = "Email", enabled = false)
 
-                    ProfileInputField(value = address, onValueChange = { address = it }, label = "Delivery Address")
+                    ProfileInputField(value = address, onValueChange = onAddressChange, label = "Delivery Address")
 
-                    ProfileInputField(value = contact, onValueChange = { contact = it }, label = "Contact Number")
+                    ProfileInputField(value = contact, onValueChange = onContactChange, label = "Contact Number")
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = {
-                    if (name.isBlank() || address.isBlank() || contact.isBlank()) {
-                        Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
-                    } else {
-                        loading = true
-                        val performUpdate = { finalImageUrl: String ->
-                            currentUser?.uid?.let { uid ->
-                                val updatedUser = UserModel(
-                                    id = uid,
-                                    name = name,
-                                    email = email,
-                                    address = address,
-                                    contact = contact,
-                                    role = role,
-                                    imageUrl = finalImageUrl
-                                )
-                                viewModel.editProfile(uid, updatedUser) { success, message ->
-                                    loading = false
-                                    Toast.makeText(context, if (success) "Profile updated successfully!" else message, Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-
-                        if (selectedImageUri != null) {
-                            viewModel.uploadImage(selectedImageUri!!) { success, newUrl ->
-                                if (success) {
-                                    performUpdate(newUrl)
-                                } else {
-                                    loading = false
-                                    Toast.makeText(context, "Image upload failed: $newUrl", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        } else {
-                            performUpdate(imageUrl)
-                        }
-                    }
-                },
+                onClick = onSave,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -278,13 +328,7 @@ fun ProfileBody(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(12.dp))
 
             TextButton(
-                onClick = {
-                    FirebaseAuth.getInstance().signOut()
-                    Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(context, LoginActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    context.startActivity(intent)
-                },
+                onClick = onLogout,
                 modifier = Modifier.padding(bottom = 32.dp),
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
@@ -322,6 +366,41 @@ fun ProfileInputField(
                 disabledTextColor = Color.Gray
             ),
             singleLine = true
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfilePreview() {
+    FloralTheme {
+        ProfileContent(
+            name = "Pragati gaire",
+            onNameChange = {},
+            address = "lazimpath sals pizza, ktm",
+            onAddressChange = {},
+            contact = "1234567890",
+            onContactChange = {},
+            email = "pragati@example.com",
+            imageUrl = "",
+            selectedImageUri = null,
+            loading = false,
+            onBack = {},
+            onPickImage = {},
+            onSave = {},
+            onLogout = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileInputFieldPreview() {
+    FloralTheme {
+        ProfileInputField(
+            value = "John Doe",
+            onValueChange = {},
+            label = "Full Name"
         )
     }
 }

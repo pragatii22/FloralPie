@@ -41,7 +41,29 @@ class ManageOrdersActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FloralTheme {
-                ManageOrdersBody()
+                val orderViewModel: OrderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
+                val userViewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
+
+                val orders by orderViewModel.orders.observeAsState(initial = emptyList())
+                val loading by orderViewModel.loading.observeAsState(initial = false)
+                val allUsers by userViewModel.allUsers.observeAsState(emptyList())
+
+                LaunchedEffect(Unit) {
+                    orderViewModel.getAllOrders()
+                    userViewModel.getAllUser()
+                }
+
+                ManageOrdersContent(
+                    orders = orders ?: emptyList(),
+                    loading = loading,
+                    allUsers = allUsers ?: emptyList(),
+                    onBack = { finish() },
+                    onUpdateStatus = { orderId, newStatus ->
+                        orderViewModel.updateOrderStatus(orderId, newStatus) { _, message ->
+                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
             }
         }
     }
@@ -49,27 +71,20 @@ class ManageOrdersActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageOrdersBody() {
-    val context = LocalContext.current
-    val orderViewModel: OrderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
-    val userViewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
-    
-    val orders by orderViewModel.orders.observeAsState(initial = emptyList())
-    val loading by orderViewModel.loading.observeAsState(initial = false)
-    val allUsers by userViewModel.allUsers.observeAsState(emptyList())
-
-    LaunchedEffect(Unit) {
-        orderViewModel.getAllOrders()
-        userViewModel.getAllUser()
-    }
-
+fun ManageOrdersContent(
+    orders: List<OrderModel>,
+    loading: Boolean,
+    allUsers: List<com.example.floral.model.UserModel?>,
+    onBack: () -> Unit,
+    onUpdateStatus: (String, String) -> Unit
+) {
     Scaffold(
         containerColor = Color(0xFFF8F8F8),
         topBar = {
             TopAppBar(
                 title = { Text("Manage Orders", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { (context as? Activity)?.finish() }) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -83,7 +98,7 @@ fun ManageOrdersBody() {
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (orders.isNullOrEmpty()) {
+            } else if (orders.isEmpty()) {
                 Text(
                     "No orders found.",
                     modifier = Modifier.align(Alignment.Center),
@@ -95,16 +110,14 @@ fun ManageOrdersBody() {
                     contentPadding = PaddingValues(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    itemsIndexed(orders!!) { index, order ->
-                        val customerName = allUsers?.find { it?.id == order.userId }?.name ?: "Unknown Customer"
+                    itemsIndexed(orders) { index, order ->
+                        val customerName = allUsers.find { it?.id == order.userId }?.name ?: "Unknown Customer"
                         OrderAdminCard(
-                            order = order, 
-                            index = index + 1, 
+                            order = order,
+                            index = index + 1,
                             customerName = customerName,
-                            onUpdateStatus = { newStatus: String ->
-                                orderViewModel.updateOrderStatus(order.orderId, newStatus) { success: Boolean, message: String ->
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                }
+                            onUpdateStatus = { newStatus ->
+                                onUpdateStatus(order.orderId, newStatus)
                             }
                         )
                     }
@@ -205,7 +218,7 @@ fun OrderAdminCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = "• ${item.productName} (x${item.quantity})", fontSize = 13.sp)
-                    Text(text = "$${String.format(Locale.getDefault(), "%.2f", item.price * item.quantity)}", fontSize = 13.sp)
+                    Text(text = "Rs.${String.format(Locale.getDefault(), "%.2f", item.price * item.quantity)}", fontSize = 13.sp)
                 }
             }
             
@@ -220,12 +233,49 @@ fun OrderAdminCard(
             ) {
                 Text(text = "Total Price", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 Text(
-                    text = "$${String.format(Locale.getDefault(), "%.2f", order.totalAmount)}",
+                    text = "Rs.${String.format(Locale.getDefault(), "%.2f", order.totalAmount)}",
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 18.sp,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
         }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun ManageOrdersPreview() {
+    FloralTheme {
+        ManageOrdersContent(
+            orders = listOf(
+                OrderModel(
+                    orderId = "1001",
+                    userId = "user1",
+                    items = listOf(
+                        com.example.floral.model.CartModel(productName = "Red Rose", price = 12.99, quantity = 2),
+                        com.example.floral.model.CartModel(productName = "White Lily", price = 15.50, quantity = 1)
+                    ),
+                    totalAmount = 41.48,
+                    status = "Pending"
+                ),
+                OrderModel(
+                    orderId = "1002",
+                    userId = "user2",
+                    items = listOf(
+                        com.example.floral.model.CartModel(productName = "Sun Flower", price = 10.0, quantity = 3)
+                    ),
+                    totalAmount = 30.0,
+                    status = "Confirmed"
+                )
+            ),
+            loading = false,
+            allUsers = listOf(
+                com.example.floral.model.UserModel(id = "user1", name = "John Doe"),
+                com.example.floral.model.UserModel(id = "user2", name = "Jane Smith")
+            ),
+            onBack = {},
+            onUpdateStatus = { _, _ -> }
+        )
     }
 }
