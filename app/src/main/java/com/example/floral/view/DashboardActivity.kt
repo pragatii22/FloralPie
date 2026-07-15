@@ -122,8 +122,8 @@ fun DashboardHomeContent() {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
@@ -188,7 +188,7 @@ fun UserFlowerCard(flower: ProductModel, onAddToCart: () -> Unit, onViewDetails:
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .clickable { onViewDetails() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column {

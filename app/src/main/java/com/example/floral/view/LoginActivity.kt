@@ -189,11 +189,12 @@ fun LoginContent(
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4A5D8B) // Navy blue color
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(text = "Login", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
+
 
             // Registration Link
             Row(modifier = Modifier.padding(top = 16.dp)) {

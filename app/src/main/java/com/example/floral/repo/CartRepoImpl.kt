@@ -1,25 +1,83 @@
 package com.example.floral.repo
 
 import com.example.floral.model.CartModel
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.example.floral.model.ProductModel
+import com.google.firebase.database.*
 
 class CartRepoImpl : CartRepo {
     private val database = FirebaseDatabase.getInstance()
     private val cartRef = database.getReference("cart")
+    private val productRef = database.getReference("products")
 
     override fun addToCart(cartModel: CartModel, callback: (Boolean, String) -> Unit) {
-        val id = cartRef.push().key ?: ""
-        cartModel.cartId = id
-        cartRef.child(id).setValue(cartModel).addOnCompleteListener {
-            if (it.isSuccessful) {
-                callback(true, "Added to cart")
-            } else {
-                callback(false, it.exception?.message ?: "Failed to add to cart")
+        // First check product stock
+        productRef.child(cartModel.productId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(productSnapshot: DataSnapshot) {
+                val product = productSnapshot.getValue(ProductModel::class.java)
+                if (product == null) {
+                    callback(false, "Product not found")
+                    return
+                }
+
+                if (product.quantity <= 0) {
+                    callback(false, "Out of Stock")
+                    return
+                }
+
+                cartRef.orderByChild("userId").equalTo(cartModel.userId)
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            var existingCartId: String? = null
+                            var currentQtyInCart = 0
+                            
+                            for (child in snapshot.children) {
+                                val item = child.getValue(CartModel::class.java)
+                                if (item?.productId == cartModel.productId) {
+                                    existingCartId = child.key
+                                    currentQtyInCart = item.quantity
+                                    break
+                                }
+                            }
+
+                            val requestedTotalQty = currentQtyInCart + cartModel.quantity
+                            if (requestedTotalQty > product.quantity) {
+                                callback(false, "Only ${product.quantity} items available")
+                                return
+                            }
+
+                            if (existingCartId != null) {
+                                cartRef.child(existingCartId).child("quantity")
+                                    .setValue(requestedTotalQty)
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            callback(true, "Cart updated")
+                                        } else {
+                                            callback(false, task.exception?.message ?: "Failed to update cart")
+                                        }
+                                    }
+                            } else {
+                                val id = cartRef.push().key ?: ""
+                                cartModel.cartId = id
+                                cartRef.child(id).setValue(cartModel).addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        callback(true, "Added to cart")
+                                    } else {
+                                        callback(false, task.exception?.message ?: "Failed to add to cart")
+                                    }
+                                }
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            callback(false, error.message)
+                        }
+                    })
             }
-        }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(false, error.message)
+            }
+        })
     }
 
     override fun getCartItems(userId: String, callback: (Boolean, List<CartModel>?) -> Unit) {

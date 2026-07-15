@@ -1,11 +1,16 @@
 package com.example.floral.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.floral.model.ProductModel
 import com.example.floral.repo.ProductRepo
 
 class ProductViewModel(val repo: ProductRepo): ViewModel ( ) {
+
+    fun uploadImage(imageUri: Uri, callback: (Boolean, String) -> Unit) {
+        repo.uploadImage(imageUri, callback)
+    }
 
     fun addProduct(
         model: ProductModel,

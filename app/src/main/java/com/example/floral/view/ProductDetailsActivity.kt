@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -78,14 +80,14 @@ fun ProductDetailsBody(productId: String) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(modifier = Modifier.fillMaxSize().padding(padding).background(Color(0xFFF8F8F8))) {
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (product == null) {
@@ -199,7 +201,7 @@ fun ProductDetailsBody(productId: String) {
                                         }
                                     },
                                     modifier = Modifier.weight(1f).height(56.dp),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(16.dp),
                                     enabled = flower.quantity > 0
                                 ) {
                                     Icon(Icons.Default.ShoppingCart, contentDescription = null)
@@ -231,7 +233,7 @@ fun ProductDetailsBody(productId: String) {
                                         }
                                     },
                                     modifier = Modifier.weight(1f).height(56.dp),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(16.dp),
                                     enabled = flower.quantity > 0
                                 ) {
                                     Text("Buy Now")

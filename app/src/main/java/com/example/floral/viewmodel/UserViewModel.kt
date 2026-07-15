@@ -1,11 +1,16 @@
 package com.example.floral.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.floral.model.UserModel
 import com.example.floral.repo.UserRepo
 
 class UserViewModel(val repo: UserRepo): ViewModel() {
+
+    fun uploadImage(imageUri: Uri, callback: (Boolean, String) -> Unit) {
+        repo.uploadImage(imageUri, callback)
+    }
 
     fun login(
         email: String,

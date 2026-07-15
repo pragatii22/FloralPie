@@ -226,11 +226,12 @@ fun RegistrationContent(
                     .height(50.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4A5D8B) // Navy blue color from screenshot
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(text = "Sign Up", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
+
 
             Spacer(modifier = Modifier.height(20.dp))
 

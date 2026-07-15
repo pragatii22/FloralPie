@@ -1,14 +1,32 @@
 package com.example.floral.repo 
 
+import android.net.Uri
 import com.example.floral.model.ProductModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 
 class ProductRepoImpl : ProductRepo {
     private val database by lazy { FirebaseDatabase.getInstance() }
     private val ref by lazy { database.getReference("products") }
+    private val storage by lazy { FirebaseStorage.getInstance() }
+
+    override fun uploadImage(imageUri: Uri, callback: (Boolean, String) -> Unit) {
+        val fileName = "products/${System.currentTimeMillis()}.jpg"
+        val storageRef = storage.getReference(fileName)
+
+        storageRef.putFile(imageUri)
+            .addOnSuccessListener {
+                storageRef.downloadUrl.addOnSuccessListener { url ->
+                    callback(true, url.toString())
+                }
+            }
+            .addOnFailureListener {
+                callback(false, it.message ?: "Upload failed")
+            }
+    }
 
     override fun addProduct(
         model: ProductModel,

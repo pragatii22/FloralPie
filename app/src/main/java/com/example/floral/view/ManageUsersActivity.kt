@@ -89,6 +89,7 @@ fun ManageUsersBody(onBack: () -> Unit) {
     }
 
     Scaffold(
+        containerColor = Color(0xFFF8F8F8),
         topBar = {
             TopAppBar(
                 title = { Text("Manage Users", fontWeight = FontWeight.Bold) },
@@ -98,8 +99,8 @@ fun ManageUsersBody(onBack: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black
                 )
             )
         }
@@ -125,7 +126,8 @@ fun UserItemCard(user: UserModel, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier

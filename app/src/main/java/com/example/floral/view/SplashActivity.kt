@@ -41,7 +41,7 @@ fun SplashBody() {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        delay(1000)
+        delay(3000)
         val auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
 

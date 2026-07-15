@@ -1,13 +1,17 @@
 package com.example.floral.view
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -16,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -62,11 +67,19 @@ fun ProfileBody(onBack: () -> Unit) {
     var address by remember { mutableStateOf("") }
     var contact by remember { mutableStateOf("") }
     var imageUrl by remember { mutableStateOf("") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var role by remember { mutableStateOf("user") }
     var email by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
 
     val auth = FirebaseAuth.getInstance()
     val currentUser = auth.currentUser
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
 
     LaunchedEffect(Unit) {
         currentUser?.uid?.let { uid ->
@@ -95,8 +108,9 @@ fun ProfileBody(onBack: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
@@ -105,22 +119,30 @@ fun ProfileBody(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .background(Color(0xFFF8F8F8))
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Profile Picture
             Box(
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                    .background(Color.White)
+                    .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
+                    .clickable { launcher.launch("image/*") },
                 contentAlignment = Alignment.Center
             ) {
-                if (imageUrl.isNotEmpty()) {
+                if (selectedImageUri != null) {
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Selected Picture",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else if (imageUrl.isNotEmpty()) {
                     AsyncImage(
                         model = imageUrl,
                         contentDescription = "Profile Picture",
@@ -132,126 +154,175 @@ fun ProfileBody(onBack: () -> Unit) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = "Placeholder",
-                        modifier = Modifier.size(80.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        modifier = Modifier.size(60.dp),
+                        tint = Color.LightGray
+                    )
+                }
+                
+                // Small camera icon overlay
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.CameraAlt,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.White
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = name.ifEmpty { "User Name" },
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 12.dp)
+            )
+            
+            Text(
+                text = email,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "Edit Information",
+                        text = "Personal Details",
                         style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp)
-                    )
+                    HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false,
-                        shape = RoundedCornerShape(8.dp)
-                    )
+                    ProfileInputField(value = name, onValueChange = { name = it }, label = "Full Name")
+                    
+                    ProfileInputField(value = email, onValueChange = {}, label = "Email", enabled = false)
 
-                    OutlinedTextField(
-                        value = address,
-                        onValueChange = { address = it },
-                        label = { Text("Address") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp)
-                    )
+                    ProfileInputField(value = address, onValueChange = { address = it }, label = "Delivery Address")
 
-                    OutlinedTextField(
-                        value = contact,
-                        onValueChange = { contact = it },
-                        label = { Text("Contact") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = imageUrl,
-                        onValueChange = { imageUrl = it },
-                        label = { Text("Profile Image URL") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp)
-                    )
+                    ProfileInputField(value = contact, onValueChange = { contact = it }, label = "Contact Number")
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {
                     if (name.isBlank() || address.isBlank() || contact.isBlank()) {
                         Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
                     } else {
-                        currentUser?.uid?.let { uid ->
-                            val updatedUser = UserModel(
-                                id = uid,
-                                name = name,
-                                email = email,
-                                address = address,
-                                contact = contact,
-                                role = role,
-                                imageUrl = imageUrl
-                            )
-                            viewModel.editProfile(uid, updatedUser) { success, message ->
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                if (success) {
-                                    onBack()
+                        loading = true
+                        val performUpdate = { finalImageUrl: String ->
+                            currentUser?.uid?.let { uid ->
+                                val updatedUser = UserModel(
+                                    id = uid,
+                                    name = name,
+                                    email = email,
+                                    address = address,
+                                    contact = contact,
+                                    role = role,
+                                    imageUrl = finalImageUrl
+                                )
+                                viewModel.editProfile(uid, updatedUser) { success, message ->
+                                    loading = false
+                                    Toast.makeText(context, if (success) "Profile updated successfully!" else message, Toast.LENGTH_SHORT).show()
                                 }
                             }
+                        }
+
+                        if (selectedImageUri != null) {
+                            viewModel.uploadImage(selectedImageUri!!) { success, newUrl ->
+                                if (success) {
+                                    performUpdate(newUrl)
+                                } else {
+                                    loading = false
+                                    Toast.makeText(context, "Image upload failed: $newUrl", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        } else {
+                            performUpdate(imageUrl)
                         }
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(8.dp)
+                    .padding(horizontal = 16.dp)
+                    .height(54.dp),
+                shape = RoundedCornerShape(16.dp),
+                enabled = !loading
             ) {
-                Text("Update Profile", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (loading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Save Changes", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedButton(
+            TextButton(
                 onClick = {
                     FirebaseAuth.getInstance().signOut()
-                    Toast.makeText(context, "Logout Successful", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
                     val intent = Intent(context, LoginActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     context.startActivity(intent)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                modifier = Modifier.padding(bottom = 32.dp),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
-                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Logout", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("Log Out", fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
+
+@Composable
+fun ProfileInputField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    enabled: Boolean = true
+) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.Gray,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
+                disabledBorderColor = Color.LightGray.copy(alpha = 0.3f),
+                disabledTextColor = Color.Gray
+            ),
+            singleLine = true
+        )
+    }
+}
+

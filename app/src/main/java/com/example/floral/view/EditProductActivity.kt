@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -82,8 +84,9 @@ fun EditProductBody(productId: String) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
@@ -92,6 +95,7 @@ fun EditProductBody(productId: String) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(Color(0xFFF8F8F8))
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -99,8 +103,9 @@ fun EditProductBody(productId: String) {
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -111,7 +116,7 @@ fun EditProductBody(productId: String) {
                         value = name,
                         label = { Text("Flower Name") },
                         onValueChange = { name = it },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(16.dp)
                     )
                     
                     OutlinedTextField(
@@ -120,7 +125,7 @@ fun EditProductBody(productId: String) {
                         label = { Text("Price ($)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         onValueChange = { price = it },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(16.dp)
                     )
                     
                     OutlinedTextField(
@@ -129,7 +134,7 @@ fun EditProductBody(productId: String) {
                         label = { Text("Stock Quantity") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         onValueChange = { quantity = it },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(16.dp)
                     )
 
                     OutlinedTextField(
@@ -138,7 +143,7 @@ fun EditProductBody(productId: String) {
                         label = { Text("Description") },
                         onValueChange = { description = it },
                         minLines = 3,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(16.dp)
                     )
 
                     OutlinedTextField(
@@ -146,7 +151,7 @@ fun EditProductBody(productId: String) {
                         value = imageUrl,
                         label = { Text("Image URL") },
                         onValueChange = { imageUrl = it },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(16.dp)
                     )
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -160,7 +165,7 @@ fun EditProductBody(productId: String) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
                 onClick = {
                     if (name.isBlank() || price.isBlank() || quantity.isBlank()) {
                         Toast.makeText(context, "Please fill required fields", Toast.LENGTH_SHORT).show()

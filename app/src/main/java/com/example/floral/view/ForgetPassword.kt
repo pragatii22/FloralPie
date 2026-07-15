@@ -9,6 +9,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -101,6 +103,21 @@ fun ForgetPasswordContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            IconButton(
+                onClick = { (context as? ComponentActivity)?.finish() },
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(top = 16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
             Text(
                 text = "Forgot Password",
                 color = Color.Black,
@@ -138,11 +155,12 @@ fun ForgetPasswordContent(
                     .height(50.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4A5D8B) // Navy blue color
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(text = "Send Reset Link", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
+
         }
     }
 }

@@ -64,6 +64,7 @@ fun ManageOrdersBody() {
     }
 
     Scaffold(
+        containerColor = Color(0xFFF8F8F8),
         topBar = {
             TopAppBar(
                 title = { Text("Manage Orders", fontWeight = FontWeight.Bold) },
@@ -73,8 +74,8 @@ fun ManageOrdersBody() {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black
                 )
             )
         }
@@ -100,8 +101,8 @@ fun ManageOrdersBody() {
                             order = order, 
                             index = index + 1, 
                             customerName = customerName,
-                            onUpdateStatus = { newStatus ->
-                                orderViewModel.updateOrderStatus(order.orderId, newStatus) { success, message ->
+                            onUpdateStatus = { newStatus: String ->
+                                orderViewModel.updateOrderStatus(order.orderId, newStatus) { success: Boolean, message: String ->
                                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                 }
                             }
@@ -124,13 +125,14 @@ fun OrderAdminCard(
     val dateString = sdf.format(Date(order.orderDate))
     val serialNumber = String.format(Locale.getDefault(), "#%04d", index)
     
-    val statusOptions = listOf("Pending", "Confirmed", "Preparing", "Out for Delivery", "Delivered", "Cancelled")
+    val statusOptions = listOf("Pending", "Confirmed", "Cancelled")
     var expanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(

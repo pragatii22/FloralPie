@@ -1,8 +1,10 @@
 package com.example.floral.repo
 
+import android.net.Uri
 import com.example.floral.model.UserModel
 
 interface UserRepo {
+    fun uploadImage(imageUri: Uri, callback: (Boolean, String) -> Unit)
     fun login( email: String,
                password: String,
                callback: (Boolean, String)-> Unit )

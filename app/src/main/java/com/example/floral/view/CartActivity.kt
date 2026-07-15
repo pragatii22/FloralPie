@@ -1,6 +1,7 @@
 package com.example.floral.view
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -58,7 +59,6 @@ class CartActivity : ComponentActivity() {
 fun CartBody(showBack: Boolean = false) {
     val context = LocalContext.current
     val cartViewModel = remember { CartViewModel(CartRepoImpl()) }
-    val orderViewModel = remember { OrderViewModel(OrderRepoImpl()) }
     val auth = FirebaseAuth.getInstance()
     val currentUser = auth.currentUser
     val cartItems by cartViewModel.cartItems.observeAsState(initial = emptyList())
@@ -71,6 +71,7 @@ fun CartBody(showBack: Boolean = false) {
     }
 
     Scaffold(
+        containerColor = Color(0xFFF8F8F8),
         topBar = {
             TopAppBar(
                 title = { Text("My Shopping Cart", fontWeight = FontWeight.Bold) },
@@ -82,9 +83,9 @@ fun CartBody(showBack: Boolean = false) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
                 )
             )
         },
@@ -93,6 +94,7 @@ fun CartBody(showBack: Boolean = false) {
                 val total = cartItems?.sumOf { it.price * it.quantity } ?: 0.0
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
+                    color = Color.White,
                     tonalElevation = 8.dp,
                     shadowElevation = 8.dp
                 ) {
@@ -114,25 +116,10 @@ fun CartBody(showBack: Boolean = false) {
                         }
                         Button(
                             onClick = {
-                                if (currentUser != null) {
-                                    val order = OrderModel(
-                                        userId = currentUser.uid,
-                                        items = cartItems!!,
-                                        totalAmount = total
-                                    )
-                                    orderViewModel.placeOrder(order) { success, message ->
-                                        if (success) {
-                                            cartViewModel.clearCart(currentUser.uid) { _, _ -> }
-                                            Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_LONG).show()
-                                            if (showBack) (context as? Activity)?.finish()
-                                        } else {
-                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                }
+                                context.startActivity(Intent(context, CheckoutActivity::class.java))
                             },
                             modifier = Modifier.height(50.dp).width(160.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Text("Checkout", fontWeight = FontWeight.Bold)
                         }
@@ -141,7 +128,7 @@ fun CartBody(showBack: Boolean = false) {
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding).background(Color(0xFFF8F8F8))) {
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (cartItems.isNullOrEmpty()) {
@@ -184,7 +171,7 @@ fun CartBody(showBack: Boolean = false) {
 fun CartItemCard(item: CartModel, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {

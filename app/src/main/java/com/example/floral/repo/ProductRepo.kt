@@ -1,8 +1,10 @@
 package com.example.floral.repo 
 
+import android.net.Uri
 import com.example.floral.model.ProductModel
 
 interface ProductRepo {
+    fun uploadImage(imageUri: Uri, callback: (Boolean, String) -> Unit)
     fun addProduct(model: ProductModel, callback: (Boolean, String) -> Unit)
     fun updateProduct(model: ProductModel, callback: (Boolean, String) -> Unit)
     fun deleteProduct(id: String, callback: (Boolean, String) -> Unit)

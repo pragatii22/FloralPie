@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +64,9 @@ fun AdminDashboardBody() {
                     },
                     icon = { Icon(Icons.Default.Person, contentDescription = null) }
                 )
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
                 NavigationDrawerItem(
                     label = { Text("Logout") },
                     selected = false,
@@ -89,8 +94,9 @@ fun AdminDashboardBody() {
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = Color.White,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
             }
@@ -99,13 +105,14 @@ fun AdminDashboardBody() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .background(Color(0xFFF8F8F8))
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Top)
+                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
                 AdminCard(
-                    title = "Manage Flowers",
+                    title = "Manage Flowers & Orders",
                     icon = Icons.Default.Inventory
                 ) {
                     context.startActivity(Intent(context, HomeActivity::class.java))
@@ -115,12 +122,6 @@ fun AdminDashboardBody() {
                     icon = Icons.Default.People
                 ) {
                     context.startActivity(Intent(context, ManageUsersActivity::class.java))
-                }
-                AdminCard(
-                    title = "Manage Orders",
-                    icon = Icons.Default.ShoppingCart
-                ) {
-                    context.startActivity(Intent(context, ManageOrdersActivity::class.java))
                 }
             }
         }
@@ -133,25 +134,34 @@ fun AdminCard(title: String, icon: ImageVector, onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
-                .padding(24.dp)
+                .padding(20.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             Text(
                 text = title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
             )
         }
     }
