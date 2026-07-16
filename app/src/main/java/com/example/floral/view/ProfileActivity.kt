@@ -393,15 +393,5 @@ fun ProfilePreview() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ProfileInputFieldPreview() {
-    FloralTheme {
-        ProfileInputField(
-            value = "John Doe",
-            onValueChange = {},
-            label = "Full Name"
-        )
-    }
-}
+
 

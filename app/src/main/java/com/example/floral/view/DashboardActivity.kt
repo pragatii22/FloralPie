@@ -555,30 +555,4 @@ fun DashboardPreview() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DashboardHomeBodyPreview() {
-    FloralTheme {
-        DashboardHomeBody(
-            allProducts = listOf(
-                ProductModel(
-                    productId = "1",
-                    productName = "Red Rose",
-                    price = 12.99,
-                    quantity = 10,
-                    imageUrl = ""
-                ),
-                ProductModel(
-                    productId = "2",
-                    productName = "White Lily",
-                    price = 15.50,
-                    quantity = 0,
-                    imageUrl = ""
-                )
-            ),
-            loading = false,
-            onAddToCart = {},
-            onViewDetails = {}
-        )
-    }
-}
+
