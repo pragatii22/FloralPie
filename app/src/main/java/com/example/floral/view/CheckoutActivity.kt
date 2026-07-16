@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -190,7 +191,9 @@ fun CheckoutContent(
                     modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
                 )
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onPlaceOrder() },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
@@ -199,7 +202,7 @@ fun CheckoutContent(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        RadioButton(selected = true, onClick = null)
+                        RadioButton(selected = true, onClick = { onPlaceOrder() })
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Cash On Delivery", fontWeight = FontWeight.Medium)
                     }

@@ -69,6 +69,9 @@ fun AdminDashboardBody() {
         },
         onManageUsersClick = {
             context.startActivity(Intent(context, ManageUsersActivity::class.java))
+        },
+        onManageOrdersClick = {
+            context.startActivity(Intent(context, ManageOrdersActivity::class.java))
         }
     )
 }
@@ -81,7 +84,8 @@ fun AdminDashboardContent(
     onProfileClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onManageFlowersClick: () -> Unit,
-    onManageUsersClick: () -> Unit
+    onManageUsersClick: () -> Unit,
+    onManageOrdersClick: () -> Unit
 ) {
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -143,6 +147,11 @@ fun AdminDashboardContent(
                     icon = Icons.Default.People,
                     onClick = onManageUsersClick
                 )
+                AdminCard(
+                    title = "Manage Customer Orders",
+                    icon = Icons.Default.ShoppingCart,
+                    onClick = onManageOrdersClick
+                )
             }
         }
     }
@@ -158,7 +167,8 @@ fun AdminDashboardPreview() {
             onProfileClick = {},
             onLogoutClick = {},
             onManageFlowersClick = {},
-            onManageUsersClick = {}
+            onManageUsersClick = {},
+            onManageOrdersClick = {}
         )
     }
 }

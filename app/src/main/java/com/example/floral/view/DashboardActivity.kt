@@ -242,49 +242,6 @@ fun DashboardContent(
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
 
-                if (userState?.role == "admin") {
-                    HorizontalDivider(modifier = Modifier.padding(16.dp))
-                    Text(
-                        "Admin Management",
-                        modifier = Modifier.padding(start = 28.dp, bottom = 8.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.Gray
-                    )
-
-                    NavigationDrawerItem(
-                        label = { Text("Manage Flowers") },
-                        selected = false,
-                        onClick = {
-                            onCloseDrawer()
-                            onNavigateToActivity(HomeActivity::class.java)
-                        },
-                        icon = { Icon(Icons.Default.Inventory, contentDescription = null) },
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
-
-                    NavigationDrawerItem(
-                        label = { Text("Manage Users") },
-                        selected = false,
-                        onClick = {
-                            onCloseDrawer()
-                            onNavigateToActivity(ManageUsersActivity::class.java)
-                        },
-                        icon = { Icon(Icons.Default.People, contentDescription = null) },
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
-
-                    NavigationDrawerItem(
-                        label = { Text("Manage Orders") },
-                        selected = false,
-                        onClick = {
-                            onCloseDrawer()
-                            onNavigateToActivity(ManageOrdersActivity::class.java)
-                        },
-                        icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = null) },
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
-                }
-
                 Spacer(modifier = Modifier.weight(1f))
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))

@@ -11,11 +11,11 @@ import com.google.firebase.storage.FirebaseStorage
 class ProductRepoImpl : ProductRepo {
     private val database by lazy { FirebaseDatabase.getInstance() }
     private val ref by lazy { database.getReference("products") }
-    private val storage by lazy { FirebaseStorage.getInstance() }
+    private val storage by lazy { FirebaseStorage.getInstance("gs://floral-29504.firebasestorage.app") }
 
     override fun uploadImage(imageUri: Uri, callback: (Boolean, String) -> Unit) {
         val fileName = "products/${System.currentTimeMillis()}.jpg"
-        val storageRef = storage.getReference(fileName)
+        val storageRef = storage.reference.child(fileName)
 
         storageRef.putFile(imageUri)
             .addOnSuccessListener {
