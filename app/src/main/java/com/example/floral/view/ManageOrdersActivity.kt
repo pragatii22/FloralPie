@@ -205,8 +205,7 @@ fun OrderAdminCard(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(text = "Customer: $customerName", fontWeight = FontWeight.Medium, fontSize = 14.sp)
-            Text(text = "Date: $dateString", fontSize = 12.sp, color = Color.Gray)
-            
+
             Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
             Spacer(modifier = Modifier.height(8.dp))
@@ -271,8 +270,8 @@ fun ManageOrdersPreview() {
             ),
             loading = false,
             allUsers = listOf(
-                com.example.floral.model.UserModel(id = "user1", name = "John Doe"),
-                com.example.floral.model.UserModel(id = "user2", name = "Jane Smith")
+                com.example.floral.model.UserModel(id = "user1", name = "Pragati"),
+                com.example.floral.model.UserModel(id = "user2", name = "Chuchu")
             ),
             onBack = {},
             onUpdateStatus = { _, _ -> }
