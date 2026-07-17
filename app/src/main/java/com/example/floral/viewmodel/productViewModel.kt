@@ -1,5 +1,6 @@
 package com.example.floral.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,8 +9,8 @@ import com.example.floral.repo.ProductRepo
 
 class ProductViewModel(val repo: ProductRepo): ViewModel ( ) {
 
-    fun uploadImage(imageUri: Uri, callback: (Boolean, String) -> Unit) {
-        repo.uploadImage(imageUri, callback)
+    fun uploadImage(context: Context, imageUri: Uri, callback: (Boolean, String) -> Unit) {
+        repo.uploadImage(context, imageUri, callback)
     }
 
     fun addProduct(

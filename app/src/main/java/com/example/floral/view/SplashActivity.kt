@@ -46,31 +46,19 @@ fun SplashBody() {
         val currentUser = auth.currentUser
 
         if (currentUser != null) {
-            // Reload user to ensure the session is still valid and account not disabled
-            currentUser.reload().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val repo = UserRepoImpl()
-                    repo.getUserId(currentUser.uid) { success, _, user ->
-                        if (success && user != null) {
-                            if (user.role == "admin") {
-                                val intent = Intent(context, AdminDashboardActivity::class.java)
-                                context.startActivity(intent)
-                            } else {
-                                val intent = Intent(context, DashboardActivity::class.java)
-                                context.startActivity(intent)
-                            }
-                        } else {
-                            // Fallback to login if user data cannot be fetched
-                            context.startActivity(Intent(context, LoginActivity::class.java))
-                        }
-                        (context as? ComponentActivity)?.finish()
+            val userRepo = UserRepoImpl()
+            userRepo.getUserId(currentUser.uid) { success, message, userModel ->
+                if (success && userModel != null) {
+                    if (userModel.role == "admin") {
+                        context.startActivity(Intent(context, AdminDashboardActivity::class.java))
+                    } else {
+                        context.startActivity(Intent(context, DashboardActivity::class.java))
                     }
                 } else {
-                    // Session might be expired or malformed, sign out and go to login
-                    auth.signOut()
-                    context.startActivity(Intent(context, LoginActivity::class.java))
-                    (context as? ComponentActivity)?.finish()
+                    // Fallback to Dashboard if user data can't be fetched
+                    context.startActivity(Intent(context, DashboardActivity::class.java))
                 }
+                (context as? ComponentActivity)?.finish()
             }
         } else {
             // No user logged in

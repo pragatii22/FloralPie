@@ -153,7 +153,7 @@ fun ProfileBody(onBack: () -> Unit, hideTopBar: Boolean = false) {
                     }
 
                     if (selectedImageUri != null) {
-                        viewModel.uploadImage(selectedImageUri!!) { success, newUrl ->
+                        viewModel.uploadImage(context, selectedImageUri!!) { success, newUrl ->
                             if (success) {
                                 performUpdate(newUrl)
                             } else {

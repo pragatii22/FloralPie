@@ -1,5 +1,6 @@
 package com.example.floral.repo
 
+import android.content.Context
 import android.net.Uri
 import com.example.floral.model.UserModel
 import com.example.floral.repo.UserRepo
@@ -8,28 +9,22 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.storage.FirebaseStorage
 
 class UserRepoImpl : UserRepo {
     val auth = FirebaseAuth.getInstance()
     val database = FirebaseDatabase.getInstance()
-    private val storage by lazy { FirebaseStorage.getInstance("gs://floral-29504.firebasestorage.app") }
+    private val imageRepo = ImageRepoImpl()
 
     val ref = database.getReference("users")
 
-    override fun uploadImage(imageUri: Uri, callback: (Boolean, String) -> Unit) {
-        val fileName = "profile_pics/${auth.currentUser?.uid ?: System.currentTimeMillis()}.jpg"
-        val storageRef = storage.reference.child(fileName)
-
-        storageRef.putFile(imageUri)
-            .addOnSuccessListener {
-                storageRef.downloadUrl.addOnSuccessListener { url ->
-                    callback(true, url.toString())
-                }
+    override fun uploadImage(context: Context, imageUri: Uri, callback: (Boolean, String) -> Unit) {
+        imageRepo.uploadImage(context, imageUri) { imageUrl ->
+            if (imageUrl != null) {
+                callback(true, imageUrl)
+            } else {
+                callback(false, "Upload failed")
             }
-            .addOnFailureListener {
-                callback(false, it.message ?: "Upload failed")
-            }
+        }
     }
 
     override fun login(

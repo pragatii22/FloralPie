@@ -1,0 +1,47 @@
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
+# Gradle
+.gradle/
+build/
+
+# Local config (VERY important)
+local.properties
+
+# OS junk
+.DS_Store
+
+# Android build outputs
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+
+# Navigation editor / caches
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+app/google-services.json
+
+# Admin provisioning tooling (never commit Firebase Admin SDK credentials)
+admin-tools/serviceAccountKey.json
+admin-tools/node_modules/
+admin-tools/*.log
+
+# Cloud Functions
+functions/node_modules/
+functions/lib/
+functions/*.log
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+.firebaserc
+
+# Release signing (never commit a keystore, its passwords, or their location)
+keystore.properties
+*.jks
+*.keystore

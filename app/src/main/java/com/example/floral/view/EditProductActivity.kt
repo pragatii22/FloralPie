@@ -129,7 +129,7 @@ fun EditProductBody(productId: String) {
             }
 
             if (selectedImageUri != null) {
-                productViewModel.uploadImage(selectedImageUri!!) { success, newUrl ->
+                productViewModel.uploadImage(context, selectedImageUri!!) { success, newUrl ->
                     if (success) {
                         performUpdate(newUrl)
                     } else {

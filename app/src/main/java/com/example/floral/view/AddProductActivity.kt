@@ -88,7 +88,7 @@ fun AddProductBody() {
             }
 
             loading = true
-            productViewModel.uploadImage(imageUri!!) { success, imageUrl ->
+            productViewModel.uploadImage(context, imageUri!!) { success, imageUrl ->
                 if (success) {
                     val model = ProductModel(
                         productName = name,
