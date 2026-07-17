@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -147,7 +148,7 @@ fun LoginContent(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("email"),
                 colors = textFieldColors
             )
 
@@ -168,7 +169,7 @@ fun LoginContent(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("password"),
                 colors = textFieldColors
             )
 
@@ -182,7 +183,7 @@ fun LoginContent(
                     .align(Alignment.End)
                     .clickable {
                         onForgotPasswordClick()
-                    }
+                    }.testTag("forgotPassword")
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -191,7 +192,7 @@ fun LoginContent(
                 onClick = {
                     onLogin(email, password)
                 },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier.fillMaxWidth().height(50.dp).testTag("login"),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
@@ -215,7 +216,7 @@ fun LoginContent(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
                         onSignUpClick()
-                    }
+                    }.testTag("register")
                 )
             }
         }

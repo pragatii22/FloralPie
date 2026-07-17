@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -134,7 +135,7 @@ fun RegistrationContent(
                 value = fullName,
                 onValueChange = { fullName = it },
                 label = { Text("Full Name") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("fullName"),
                 colors = textFieldColors
             )
 
@@ -144,7 +145,7 @@ fun RegistrationContent(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("email"),
                 colors = textFieldColors
             )
 
@@ -154,7 +155,7 @@ fun RegistrationContent(
                 value = address,
                 onValueChange = { address = it },
                 label = { Text("Address") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("address"),
                 colors = textFieldColors
             )
 
@@ -164,7 +165,7 @@ fun RegistrationContent(
                 value = contact,
                 onValueChange = { contact = it },
                 label = { Text("Contact Number") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("contact"),
                 colors = textFieldColors
             )
 
@@ -185,7 +186,7 @@ fun RegistrationContent(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("password"),
                 colors = textFieldColors
             )
 
@@ -228,7 +229,8 @@ fun RegistrationContent(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .height(50.dp)
+                    .testTag("signUpButton"),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary

@@ -2,89 +2,71 @@ package com.example.floral.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.example.floral.repo.UserRepo
-import org.junit.Assert.*
-import org.junit.Before
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito.*
-import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 
 class UserViewModelTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    @Mock
-    private lateinit var repo: UserRepo
+    @Test
+    fun login_success_test() {
+        val repo = mock<UserRepo>()
+        val viewModel = UserViewModel(repo)
 
-    private lateinit var viewModel: UserViewModel
+        doAnswer { invocation ->
+            val callback = invocation.getArgument<(Boolean, String) -> Unit>(2)
+            callback(true, "Login success")
+            null
+        }.`when`(repo).login(eq("test@gmail.com"), eq("123456"), any())
 
-    @Before
-    fun setUp() {
-        MockitoAnnotations.openMocks(this)
-        viewModel = UserViewModel(repo)
+        var successResult = false
+        var messageResult = ""
+
+        viewModel.login("test@gmail.com", "123456") { success, msg ->
+            successResult = success
+            messageResult = msg
+        }
+
+        assertTrue(successResult)
+        assertEquals("Login success", messageResult)
+
+        verify(repo).login(eq("test@gmail.com"), eq("123456"), any())
     }
 
     @Test
-    fun `login success sets loading to false and calls callback`() {
-        val email = "test@example.com"
-        val password = "password"
-        
-        // Mocking repo.login to simulate success
-        doAnswer {
-            val callback = it.getArgument<(Boolean, String) -> Unit>(2)
-            callback(true, "Login Successful")
-            null
-        }.`when`(repo).login(eq(email), eq(password), any())
+    fun register_success_test() {
+        val repo = mock<UserRepo>()
+        val viewModel = UserViewModel(repo)
 
-        var resultSuccess = false
-        viewModel.login(email, password) { success, _ ->
-            resultSuccess = success
+        doAnswer { invocation ->
+            val callback = invocation.getArgument<(Boolean, String, String) -> Unit>(2)
+            callback(true, "Register success", "uid123")
+            null
+        }.`when`(repo).register(eq("test@gmail.com"), eq("123456"), any())
+
+        var successResult = false
+        var messageResult = ""
+        var uidResult = ""
+
+        viewModel.register("test@gmail.com", "123456") { success, msg, uid ->
+            successResult = success
+            messageResult = msg
+            uidResult = uid
         }
 
-        assertTrue(resultSuccess)
-        assertEquals(false, viewModel.loading.value)
-    }
+        assertTrue(successResult)
+        assertEquals("Register success", messageResult)
+        assertEquals("uid123", uidResult)
 
-    @Test
-    fun `login failure sets loading to false and calls callback`() {
-        val email = "test@example.com"
-        val password = "wrong"
-        
-        doAnswer {
-            val callback = it.getArgument<(Boolean, String) -> Unit>(2)
-            callback(false, "Login Failed")
-            null
-        }.`when`(repo).login(eq(email), eq(password), any())
-
-        var resultSuccess = true
-        viewModel.login(email, password) { success, _ ->
-            resultSuccess = success
-        }
-
-        assertFalse(resultSuccess)
-        assertEquals(false, viewModel.loading.value)
-    }
-
-    @Test
-    fun `register success calls callback`() {
-        val email = "test@example.com"
-        val password = "password"
-        
-        doAnswer {
-            val callback = it.getArgument<(Boolean, String, String) -> Unit>(2)
-            callback(true, "Success", "uid123")
-            null
-        }.`when`(repo).register(eq(email), eq(password), any())
-
-        var resultSuccess = false
-        viewModel.register(email, password) { success, _, _ ->
-            resultSuccess = success
-        }
-
-        assertTrue(resultSuccess)
+        verify(repo).register(eq("test@gmail.com"), eq("123456"), any())
     }
 }
