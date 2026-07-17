@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -173,6 +174,7 @@ fun ProfileBody(onBack: () -> Unit, hideTopBar: Boolean = false) {
             email = email,
             contact = contact,
             imageUrl = imageUrl,
+            role = role,
             onBack = onBack,
             onProfileDetailsClick = { isEditing = true },
             onLogout = onLogout,
@@ -187,11 +189,13 @@ fun MainProfileContent(
     email: String,
     contact: String,
     imageUrl: String,
+    role: String,
     onBack: () -> Unit,
     onProfileDetailsClick: () -> Unit,
     onLogout: () -> Unit,
     hideTopBar: Boolean = false
 ) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -230,13 +234,21 @@ fun MainProfileContent(
                 shape = CircleShape,
                 shadowElevation = 8.dp
             ) {
-                AsyncImage(
-                    model = imageUrl.ifEmpty { R.drawable.logo },
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    error = painterResource(id = R.drawable.logo)
-                )
+                if (imageUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().padding(30.dp),
+                        tint = Color.LightGray
+                    )
+                }
             }
         }
 
@@ -249,6 +261,25 @@ fun MainProfileContent(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
+
+        // Role Badge if Admin
+        if (role == "admin") {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 4.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "ADMINISTRATOR",
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -267,6 +298,14 @@ fun MainProfileContent(
         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = Color.LightGray)
 
         // Options List
+        if (role == "user") {
+            ProfileOptionItem(
+                icon = Icons.Default.ShoppingBag,
+                label = "My Orders",
+                onClick = { context.startActivity(Intent(context, MyOrdersActivity::class.java)) }
+            )
+        }
+        
         ProfileOptionItem(
             icon = Icons.Default.Person,
             label = "Profile details",
@@ -362,48 +401,58 @@ fun EditProfileContent(
             // Profile Picture
             Box(
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(Color.White)
-                    .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
-                    .clickable { onPickImage() },
+                    .size(140.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (selectedImageUri != null) {
-                    AsyncImage(
-                        model = selectedImageUri,
-                        contentDescription = "Selected Picture",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else if (imageUrl.isNotEmpty()) {
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        error = painterResource(id = R.drawable.logo)
-                    )
-                } else {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = "Placeholder",
-                        modifier = Modifier.size(60.dp),
-                        tint = Color.LightGray
-                    )
+                // Main Circle
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
+                        .clickable { onPickImage() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (selectedImageUri != null) {
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = "Selected Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else if (imageUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = "Placeholder",
+                            modifier = Modifier.size(60.dp),
+                            tint = Color.LightGray
+                        )
+                    }
                 }
                 
                 // Small camera icon overlay
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
+                        .padding(bottom = 4.dp, end = 4.dp)
+                        .size(40.dp)
                         .background(MaterialTheme.colorScheme.primary, CircleShape)
-                        .padding(8.dp)
+                        .border(2.dp, Color.White, CircleShape)
+                        .clickable { onPickImage() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.CameraAlt,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = Color.White
                     )
                 }
@@ -517,6 +566,7 @@ fun ProfilePreview() {
             email = "pragati@gmail.com",
             contact = "0987654321",
             imageUrl = "",
+            role = "user",
             onBack = {},
             onProfileDetailsClick = {},
             onLogout = {}

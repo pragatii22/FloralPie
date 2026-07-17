@@ -46,6 +46,7 @@ import com.example.floral.viewmodel.OrderViewModel
 import com.example.floral.viewmodel.ProductViewModel
 import com.example.floral.viewmodel.UserViewModel
 import com.example.floral.viewmodel.UserViewModelFactory
+import androidx.compose.material.icons.filled.Inventory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -91,21 +92,15 @@ fun HomeBody() {
         allUsers = allUsers ?: emptyList(),
         loadingProducts = loadingProducts,
         loadingOrders = loadingOrders,
+        hideTopBar = false,
         onBack = { (context as? Activity)?.finish() },
         onAddProduct = {
             context.startActivity(Intent(context, AddProductActivity::class.java))
         },
         onDeleteProduct = { flower ->
-            val builder = android.app.AlertDialog.Builder(context)
-            builder.setTitle("Delete Flower")
-            builder.setMessage("Are you sure you want to delete '${flower.productName}'?")
-            builder.setPositiveButton("Delete") { _, _ ->
-                productViewModel.deleteProduct(flower.productId) { success, message ->
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                }
+            productViewModel.deleteProduct(flower.productId) { success, message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             }
-            builder.setNegativeButton("Cancel", null)
-            builder.show()
         },
         onEditProduct = { flower ->
             val intent = Intent(context, EditProductActivity::class.java)
@@ -130,27 +125,53 @@ fun HomeContent(
     allUsers: List<com.example.floral.model.UserModel?>,
     loadingProducts: Boolean,
     loadingOrders: Boolean,
+    hideTopBar: Boolean = false,
     onBack: () -> Unit,
     onAddProduct: () -> Unit,
     onDeleteProduct: (ProductModel) -> Unit,
     onEditProduct: (ProductModel) -> Unit,
     onUpdateOrderStatus: (String, String) -> Unit
 ) {
+    var productToDelete by remember { mutableStateOf<ProductModel?>(null) }
+
+    if (productToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { productToDelete = null },
+            title = { Text("Delete Flower") },
+            text = { Text("Are you sure you want to delete '${productToDelete?.productName}'?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    productToDelete?.let { onDeleteProduct(it) }
+                    productToDelete = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { productToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Manage Flowers & Orders", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+            if (!hideTopBar) {
+                TopAppBar(
+                    title = { Text("Manage Flowers & Orders", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
-            )
+            }
         },
         floatingActionButton = {
             if (selectedTab == 0) {
@@ -198,7 +219,7 @@ fun HomeContent(
                             items(allProducts) { flower ->
                                 FlowerCard(
                                     flower = flower,
-                                    onDelete = { onDeleteProduct(flower) },
+                                    onDelete = { productToDelete = flower },
                                     onEdit = { onEditProduct(flower) }
                                 )
                             }
@@ -290,19 +311,18 @@ fun FlowerCard(
                     modifier = Modifier
                         .size(70.dp)
                         .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.logo),
-                    error = painterResource(id = R.drawable.logo)
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = flower.productName,
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF0F0F0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Inventory, contentDescription = null, tint = Color.LightGray)
+                }
             }
 
             Spacer(modifier = Modifier.width(12.dp))

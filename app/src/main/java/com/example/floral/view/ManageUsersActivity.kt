@@ -55,10 +55,8 @@ class ManageUsersActivity : ComponentActivity() {
 
 @Composable
 fun ManageUsersBody(onBack: () -> Unit) {
-    val context = LocalContext.current
     val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
     val allUsers by viewModel.allUsers.observeAsState(emptyList())
-    var userToDelete by remember { mutableStateOf<UserModel?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.getAllUser()
@@ -67,8 +65,25 @@ fun ManageUsersBody(onBack: () -> Unit) {
     ManageUsersContent(
         allUsers = allUsers ?: emptyList(),
         onBack = onBack,
-        onDeleteClick = { userToDelete = it }
+        onDeleteClick = { user ->
+            viewModel.deleteUsr(user.id) { success, message ->
+                if (success) viewModel.getAllUser()
+            }
+        },
+        hideTopBar = false
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ManageUsersContent(
+    allUsers: List<UserModel?>,
+    onBack: () -> Unit,
+    onDeleteClick: (UserModel) -> Unit,
+    hideTopBar: Boolean = false
+) {
+    var userToDelete by remember { mutableStateOf<UserModel?>(null) }
+    val context = LocalContext.current
 
     if (userToDelete != null) {
         AlertDialog(
@@ -77,12 +92,7 @@ fun ManageUsersBody(onBack: () -> Unit) {
             text = { Text("Are you sure you want to delete '${userToDelete?.name}'?") },
             confirmButton = {
                 TextButton(onClick = {
-                    userToDelete?.let { user ->
-                        viewModel.deleteUsr(user.id) { success, message ->
-                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                            if (success) viewModel.getAllUser()
-                        }
-                    }
+                    userToDelete?.let { onDeleteClick(it) }
                     userToDelete = null
                 }) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
@@ -95,30 +105,24 @@ fun ManageUsersBody(onBack: () -> Unit) {
             }
         )
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ManageUsersContent(
-    allUsers: List<UserModel?>,
-    onBack: () -> Unit,
-    onDeleteClick: (UserModel) -> Unit
-) {
     Scaffold(
         containerColor = Color(0xFFF8F8F8),
         topBar = {
-            TopAppBar(
-                title = { Text("Manage Users", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black
+            if (!hideTopBar) {
+                TopAppBar(
+                    title = { Text("Manage Users", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White,
+                        titleContentColor = Color.Black
+                    )
                 )
-            )
+            }
         }
     ) { padding ->
         LazyColumn(
@@ -130,7 +134,7 @@ fun ManageUsersContent(
         ) {
             items(allUsers) { user ->
                 user?.let {
-                    UserItemCard(user = it, onDelete = { onDeleteClick(it) })
+                    UserItemCard(user = it, onDelete = { userToDelete = it })
                 }
             }
         }
@@ -180,8 +184,7 @@ fun UserItemCard(user: UserModel, onDelete: () -> Unit) {
                         model = user.imageUrl,
                         contentDescription = user.name,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        error = painterResource(id = R.drawable.logo)
+                        contentScale = ContentScale.Crop
                     )
                 } else {
                     Icon(

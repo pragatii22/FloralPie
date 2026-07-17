@@ -138,7 +138,7 @@ fun OrderAdminCard(
     val dateString = sdf.format(Date(order.orderDate))
     val serialNumber = String.format(Locale.getDefault(), "#%04d", index)
     
-    val statusOptions = listOf("Pending", "Confirmed", "Cancelled")
+    val statusOptions = listOf("Pending", "Processing", "Shipped", "Delivered", "Cancelled")
     var expanded by remember { mutableStateOf(false) }
 
     Card(

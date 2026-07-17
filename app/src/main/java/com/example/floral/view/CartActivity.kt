@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -62,6 +63,7 @@ fun CartBody(showBack: Boolean = false, hideTopBar: Boolean = false) {
     val currentUser = auth.currentUser
     val cartItems by cartViewModel.cartItems.observeAsState(initial = emptyList())
     val loading by cartViewModel.loading.observeAsState(initial = false)
+    var itemToDelete by remember { mutableStateOf<CartModel?>(null) }
 
     LaunchedEffect(currentUser) {
         currentUser?.let {
@@ -79,11 +81,34 @@ fun CartBody(showBack: Boolean = false, hideTopBar: Boolean = false) {
             context.startActivity(Intent(context, CheckoutActivity::class.java))
         },
         onDelete = { item ->
-            cartViewModel.removeFromCart(item.cartId) { success, message ->
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            }
+            itemToDelete = item
         }
     )
+
+    if (itemToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { itemToDelete = null },
+            title = { Text("Remove Item") },
+            text = { Text("Are you sure you want to remove '${itemToDelete?.productName}' from your cart?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    itemToDelete?.let { item ->
+                        cartViewModel.removeFromCart(item.cartId) { success, message ->
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    itemToDelete = null
+                }) {
+                    Text("Remove", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { itemToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -257,19 +282,22 @@ fun CartItemCard(item: CartModel, onDelete: () -> Unit) {
                     modifier = Modifier
                         .size(70.dp)
                         .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.logo),
-                    error = painterResource(id = R.drawable.logo)
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = item.productName,
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Crop
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFF0F0F0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Inventory,
+                        contentDescription = null,
+                        tint = Color.LightGray
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))

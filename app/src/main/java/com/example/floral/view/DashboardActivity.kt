@@ -209,39 +209,6 @@ fun DashboardContent(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                NavigationDrawerItem(
-                    label = { Text("Home Catalog") },
-                    selected = selectedTab == 0,
-                    onClick = {
-                        onTabSelected(0)
-                        onCloseDrawer()
-                    },
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-
-                NavigationDrawerItem(
-                    label = { Text("My Cart") },
-                    selected = selectedTab == 1,
-                    onClick = {
-                        onTabSelected(1)
-                        onCloseDrawer()
-                    },
-                    icon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-
-                NavigationDrawerItem(
-                    label = { Text("My Profile") },
-                    selected = selectedTab == 2,
-                    onClick = {
-                        onTabSelected(2)
-                        onCloseDrawer()
-                    },
-                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-
                 Spacer(modifier = Modifier.weight(1f))
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -392,17 +359,22 @@ fun UserFlowerCard(flower: ProductModel, onAddToCart: () -> Unit, onViewDetails:
                         model = flower.imageUrl,
                         contentDescription = flower.productName,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(id = R.drawable.logo),
-                        error = painterResource(id = R.drawable.logo)
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = flower.productName,
-                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFFF0F0F0)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Inventory,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = Color.LightGray
+                        )
+                    }
                 }
                 
                 // Price Tag Overlay
