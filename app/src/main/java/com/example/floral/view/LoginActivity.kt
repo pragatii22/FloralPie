@@ -51,10 +51,12 @@ fun LoginBody(
 ) {
     val context = LocalContext.current
     val userState by viewModel.users.observeAsState()
+    val loading by viewModel.loading.observeAsState(false)
+
+
 
     LaunchedEffect(userState) {
         userState?.let { user ->
-            Toast.makeText(context, "Welcome, ${user.name}", Toast.LENGTH_SHORT).show()
             if (user.role == "admin") {
                 context.startActivity(Intent(context, AdminDashboardActivity::class.java))
             } else {
@@ -88,15 +90,18 @@ fun LoginBody(
         },
         onSignUpClick = {
             context.startActivity(Intent(context, RegistrationActivity::class.java))
-        }
+        },
+        loading = loading
     )
+
 }
 
 @Composable
 fun LoginContent(
     onLogin: (String, String) -> Unit,
     onForgotPasswordClick: () -> Unit,
-    onSignUpClick: () -> Unit
+    onSignUpClick: () -> Unit,
+    loading: Boolean = false
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -190,9 +195,14 @@ fun LoginContent(
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                enabled = !loading
             ) {
-                Text(text = "Login", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (loading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(text = "Login", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
 
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,17 +54,21 @@ class RegistrationActivity : ComponentActivity() {
 
 @Composable
 fun RegistrationBody() {
-     val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
+    val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
+    val loading by viewModel.loading.observeAsState(false)
+    
     RegistrationContent(
         onRegister = viewModel::register,
-        onAddUser = viewModel::addUser
+        onAddUser = viewModel::addUser,
+        loading = loading
     )
 }
 
 @Composable
 fun RegistrationContent(
     onRegister: (String, String, (Boolean, String, String) -> Unit) -> Unit = { _, _, _ -> },
-    onAddUser: (String, UserModel, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> }
+    onAddUser: (String, UserModel, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> },
+    loading: Boolean = false
 ) {
     val context = LocalContext.current
     var fullName by remember { mutableStateOf("") }
@@ -227,9 +232,14 @@ fun RegistrationContent(
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                enabled = !loading
             ) {
-                Text(text = "Sign Up", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (loading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(text = "Sign Up", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
 
 

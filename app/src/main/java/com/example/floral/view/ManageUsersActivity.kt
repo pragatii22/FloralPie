@@ -82,29 +82,7 @@ fun ManageUsersContent(
     onDeleteClick: (UserModel) -> Unit,
     hideTopBar: Boolean = false
 ) {
-    var userToDelete by remember { mutableStateOf<UserModel?>(null) }
     val context = LocalContext.current
-
-    if (userToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { userToDelete = null },
-            title = { Text("Delete User") },
-            text = { Text("Are you sure you want to delete '${userToDelete?.name}'?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    userToDelete?.let { onDeleteClick(it) }
-                    userToDelete = null
-                }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { userToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 
     Scaffold(
         containerColor = Color(0xFFF8F8F8),
@@ -134,7 +112,7 @@ fun ManageUsersContent(
         ) {
             items(allUsers) { user ->
                 user?.let {
-                    UserItemCard(user = it, onDelete = { userToDelete = it })
+                    UserItemCard(user = it, onDelete = { onDeleteClick(it) })
                 }
             }
         }

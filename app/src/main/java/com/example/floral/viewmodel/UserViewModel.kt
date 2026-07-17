@@ -18,14 +18,22 @@ class UserViewModel(val repo: UserRepo): ViewModel() {
         password: String,
         callback: (Boolean, String) -> Unit
     ) {
-        repo.login(email, password, callback)
+        _loading.value = true
+        repo.login(email, password) { success, message ->
+            _loading.value = false
+            callback(success, message)
+        }
     }
 
     fun register(
         email: String, password: String,
         callback: (Boolean, String, String) -> Unit
     ) {
-        repo.register(email, password, callback)
+        _loading.value = true
+        repo.register(email, password) { success, message, uid ->
+            if (!success) _loading.value = false
+            callback(success, message, uid)
+        }
     }
 
     fun editProfile(
@@ -40,7 +48,10 @@ class UserViewModel(val repo: UserRepo): ViewModel() {
         id: String, model: UserModel,
         callback: (Boolean, String) -> Unit
     ) {
-        repo.addUser(id, model, callback)
+        repo.addUser(id, model) { success, message ->
+            _loading.value = false
+            callback(success, message)
+        }
     }
 
     fun deleteUsr(

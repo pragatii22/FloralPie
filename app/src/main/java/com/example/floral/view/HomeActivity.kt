@@ -132,29 +132,6 @@ fun HomeContent(
     onEditProduct: (ProductModel) -> Unit,
     onUpdateOrderStatus: (String, String) -> Unit
 ) {
-    var productToDelete by remember { mutableStateOf<ProductModel?>(null) }
-
-    if (productToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { productToDelete = null },
-            title = { Text("Delete Flower") },
-            text = { Text("Are you sure you want to delete '${productToDelete?.productName}'?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    productToDelete?.let { onDeleteProduct(it) }
-                    productToDelete = null
-                }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { productToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
     Scaffold(
         topBar = {
             if (!hideTopBar) {
@@ -219,7 +196,7 @@ fun HomeContent(
                             items(allProducts) { flower ->
                                 FlowerCard(
                                     flower = flower,
-                                    onDelete = { productToDelete = flower },
+                                    onDelete = { onDeleteProduct(flower) },
                                     onEdit = { onEditProduct(flower) }
                                 )
                             }

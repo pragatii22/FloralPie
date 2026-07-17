@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,25 +49,29 @@ class ForgetPasswordActivity : ComponentActivity() {
 fun ForgetPasswordBody() {
     val context = LocalContext.current
     val viewModel: UserViewModel = viewModel(factory = UserViewModelFactory())
-
+    val loading by viewModel.loading.observeAsState(false)
+    
     ForgetPasswordContent(
         onSendResetLink = { email ->
             viewModel.forgetPassword(email) { success, message ->
                 if (success) {
-                    Toast.makeText(context, "Reset link sent successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Reset link sent successfully to $email", Toast.LENGTH_SHORT).show()
                     context.startActivity(Intent(context, LoginActivity::class.java))
                     (context as? ComponentActivity)?.finish()
                 } else {
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
             }
-        }
+        },
+        loading = loading
     )
+
 }
 
 @Composable
 fun ForgetPasswordContent(
-    onSendResetLink: (String) -> Unit
+    onSendResetLink: (String) -> Unit,
+    loading: Boolean = false
 ) {
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
@@ -156,9 +161,14 @@ fun ForgetPasswordContent(
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                enabled = !loading
             ) {
-                Text(text = "Send Reset Link", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (loading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(text = "Send Reset Link", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
 
         }

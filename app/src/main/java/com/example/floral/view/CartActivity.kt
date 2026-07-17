@@ -63,7 +63,6 @@ fun CartBody(showBack: Boolean = false, hideTopBar: Boolean = false) {
     val currentUser = auth.currentUser
     val cartItems by cartViewModel.cartItems.observeAsState(initial = emptyList())
     val loading by cartViewModel.loading.observeAsState(initial = false)
-    var itemToDelete by remember { mutableStateOf<CartModel?>(null) }
 
     LaunchedEffect(currentUser) {
         currentUser?.let {
@@ -81,34 +80,11 @@ fun CartBody(showBack: Boolean = false, hideTopBar: Boolean = false) {
             context.startActivity(Intent(context, CheckoutActivity::class.java))
         },
         onDelete = { item ->
-            itemToDelete = item
+            cartViewModel.removeFromCart(item.cartId) { success, message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
         }
     )
-
-    if (itemToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { itemToDelete = null },
-            title = { Text("Remove Item") },
-            text = { Text("Are you sure you want to remove '${itemToDelete?.productName}' from your cart?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    itemToDelete?.let { item ->
-                        cartViewModel.removeFromCart(item.cartId) { success, message ->
-                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    itemToDelete = null
-                }) {
-                    Text("Remove", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { itemToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
